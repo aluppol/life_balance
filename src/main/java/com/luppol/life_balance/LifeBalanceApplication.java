@@ -1,13 +1,13 @@
-package life_balance.app;
+package com.luppol.life_balance;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class AppApplication {
+public class LifeBalanceApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(AppApplication.class, args);
+		SpringApplication.run(LifeBalanceApplication.class, args);
 	}
 
 }
