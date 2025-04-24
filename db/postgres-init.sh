@@ -3,7 +3,8 @@ set -e
 
 # Required environment variables
 required_vars=(
-  PG_NAME
+  POSTGRES_USER
+  POSTGRES_DB
   PG_USER
   PG_PASS
 )
@@ -15,17 +16,23 @@ for v in "${required_vars[@]}"; do
   fi
 done
 
-# Create the application user and grant privileges
+# Create application user
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
-  CREATE USER $PG_USER WITH PASSWORD '$PG_PASS';
-  GRANT CONNECT ON DATABASE $PG_NAME TO $PG_USER;
+  DO \$\$
+  BEGIN
+    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '$PG_USER') THEN
+      CREATE USER $PG_USER WITH PASSWORD '$PG_PASS';
+    END IF;
+  END
+  \$\$;
+  GRANT CONNECT ON DATABASE $POSTGRES_DB TO $PG_USER;
 EOSQL
 
-# Connect to the target database and set up extensions/permissions
-psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$PG_NAME" <<-EOSQL
+# Grant schema and object privileges
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
   CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-  GRANT USAGE ON SCHEMA public TO $PG_USER;
+  GRANT USAGE, CREATE ON SCHEMA public TO $PG_USER;
   GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO $PG_USER;
 
   ALTER DEFAULT PRIVILEGES IN SCHEMA public

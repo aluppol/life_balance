@@ -19,3 +19,6 @@ services:
 
 volumes:
   pgdata:
+
+networks:
+  life_balance:
