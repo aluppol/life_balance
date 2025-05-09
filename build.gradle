@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.4.4'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'org.liquibase.gradle' version '2.2.0'
 }
 
 group = 'com.luppol'
@@ -17,13 +18,39 @@ repositories {
 	mavenCentral()
 }
 
+configurations {
+	liquibaseRuntime
+}
+
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.liquibase:liquibase-core'
 	implementation 'org.postgresql:postgresql:42.7.3'
+
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	liquibaseRuntime 'org.liquibase:liquibase-core'
+	liquibaseRuntime 'info.picocli:picocli:4.7.5'
+	liquibaseRuntime 'org.postgresql:postgresql:42.7.5'
+	liquibaseRuntime sourceSets.main.output  // Include project classes and resources
+}
+
+liquibase {
+	activities {
+		main {
+			changeLogFile 'src/main/resources/db/changelog/db.changelog-master.xml'
+			url "jdbc:postgresql://${System.getenv('PG_HOST')}:${System.getenv('PG_PORT')}/${System.getenv('PG_NAME')}"
+			username System.getenv('PG_USER')
+			password System.getenv('PG_PASS')
+			driver 'org.postgresql.Driver'
+		}
+	}
+	runList = 'main'  // Use the 'main' activity by default for Liquibase tasks
 }
 
 tasks.named('test') {
