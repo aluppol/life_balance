@@ -37,8 +37,11 @@ The application is inspired by the principles outlined in *The 7 Habits of Highl
 
 2. **Run the development environment**:
     ```bash
-    ./dev.sh up
-    ./dev.sh down
+    ./dev.sh up -- start app
+    ./dev.sh down -- exit app
+    ./dev.sh hard-reset -- full app restart (all data removed)
+    ./dev.sh migrate -- up all migrations
+    ./dev.sh rollback -- down 1 last migration
     ```
 
    This script will:
