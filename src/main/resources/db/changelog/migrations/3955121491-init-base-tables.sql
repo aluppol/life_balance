@@ -5,7 +5,7 @@
 
 CREATE TABLE core.Mission (
     id SERIAL PRIMARY KEY,
-    text VARCHAR(2048)
+    text VARCHAR(2048) NOT NULL
 );
 
 CREATE TABLE core.Person (
@@ -15,7 +15,7 @@ CREATE TABLE core.Person (
     middle_name VARCHAR(256),
     phone_number VARCHAR(20),
     address VARCHAR(256),
-    mission_id INTEGER,
+    mission_id INTEGER UNIQUE,
     CONSTRAINT fk_person_mission FOREIGN KEY (mission_id) REFERENCES  core.Mission(id) ON UPDATE CASCADE ON DELETE SET NULL
 );
 
@@ -23,7 +23,7 @@ CREATE TABLE core.Enterprise (
     id SERIAL PRIMARY KEY,
     name VARCHAR (128) NOT NULL,
     description VARCHAR(1024),
-    mission_id INTEGER,
+    mission_id INTEGER UNIQUE,
     CONSTRAINT fk_enterprise_mission FOREIGN KEY (mission_id) REFERENCES core.Mission.id ON UPDATE CASCADE ON DELETE SET NULL
 );
 
