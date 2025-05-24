@@ -18,7 +18,7 @@ case "$ACTION" in
     load_env
 
     echo "Starting PostgreSQL via Docker Compose..."
-    docker-compose up -d
+    docker compose up -d
 
     echo "Starting Spring Boot app with Gradle..."
     ./gradlew bootRun
@@ -26,7 +26,7 @@ case "$ACTION" in
 
   down)
     echo "Stopping Docker Compose services..."
-    docker-compose down
+    docker compose down
 
     echo "Spring Boot app is stopped (if run via Gradle, stop manually with Ctrl+C)."
     ;;
@@ -35,10 +35,10 @@ case "$ACTION" in
     load_env
 
     echo "Stopping and removing containers and volumes..."
-    docker-compose down -v --remove-orphans
+    docker compose down -v --remove-orphans
 
     echo "Rebuilding containers from scratch..."
-    docker-compose up -d --build
+    docker compose up -d --build
 
     echo "Starting Spring Boot app with Gradle..."
     ./gradlew bootRun

@@ -35,5 +35,5 @@ public class Person {
     
     @OneToOne(fetch=FetchType.LAZY, optional=true)
     @JoinColumn(name="mission_id", unique=true, nullable=true)
-    private Misssion mission;
+    private Mission mission;
 }

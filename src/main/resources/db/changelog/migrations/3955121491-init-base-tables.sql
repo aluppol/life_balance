@@ -24,7 +24,7 @@ CREATE TABLE core.Enterprise (
     name VARCHAR (128) NOT NULL,
     description VARCHAR(1024),
     mission_id INTEGER UNIQUE,
-    CONSTRAINT fk_enterprise_mission FOREIGN KEY (mission_id) REFERENCES core.Mission.id ON UPDATE CASCADE ON DELETE SET NULL
+    CONSTRAINT fk_enterprise_mission FOREIGN KEY (mission_id) REFERENCES core.Mission(id) ON UPDATE CASCADE ON DELETE SET NULL
 );
 
 CREATE TABLE core.Value (
@@ -38,7 +38,7 @@ CREATE TABLE core.Quote (
     person_id  INTEGER NOT NULL,
     text VARCHAR (2048)  NOT NULL,
     author VARCHAR (256),
-    CONSTRAINT fk_quote_person FOREIGN KEY (person_id) REFERENCES core.Person(id) ON UPDATE CASCASE ON DELETE CASCADE
+    CONSTRAINT fk_quote_person FOREIGN KEY (person_id) REFERENCES core.Person(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE core.Note (
