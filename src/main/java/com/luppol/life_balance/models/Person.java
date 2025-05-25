@@ -1,10 +1,7 @@
 package com.luppol.life_balance.models;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 
 @Entity
@@ -18,17 +15,17 @@ public class Person {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 128)
-    private String first_name;
+    @Column(name = "first_name", nullable = false, length = 128)
+    private String firstName;
 
-    @Column(nullable = false, length = 128)
-    private String last_name;
+    @Column(name = "last_name", nullable = false, length = 128)
+    private String lastName;
 
-    @Column(length = 256)
-    private String middle_name;
+    @Column(name = "middle_name", length = 256)
+    private String middleName;
 
-    @Column(length = 20)
-    private String phone_number;
+    @Column(name = "phone_number", length = 20, unique = true)
+    private String phoneNumber;
 
     @Column(length = 256)
     private String address;

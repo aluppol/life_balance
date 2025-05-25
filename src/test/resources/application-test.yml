@@ -1,0 +1,6 @@
+spring:
+  liquibase:
+    enabled: true     # let migrations run during tests
+  jpa:
+    hibernate:
+      ddl-auto: validate

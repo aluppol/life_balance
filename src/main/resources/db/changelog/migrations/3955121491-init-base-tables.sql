@@ -1,8 +1,6 @@
 --liquibase formatted sql
 --changeset aluppol:22383f48-56f9-4f9d-815a-6a8656e60baa
 
-/* TODO test migration */
-
 CREATE TABLE core.Mission (
     id SERIAL PRIMARY KEY,
     text VARCHAR(2048) NOT NULL
@@ -13,7 +11,7 @@ CREATE TABLE core.Person (
     first_name VARCHAR(128) NOT NULL,
     last_name VARCHAR (128) NOT NULL,
     middle_name VARCHAR(256),
-    phone_number VARCHAR(20),
+    phone_number VARCHAR(20) UNIQUE,
     address VARCHAR(256),
     mission_id INTEGER UNIQUE,
     CONSTRAINT fk_person_mission FOREIGN KEY (mission_id) REFERENCES  core.Mission(id) ON UPDATE CASCADE ON DELETE SET NULL
