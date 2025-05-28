@@ -18,21 +18,8 @@ The application is inspired by the principles outlined in *The 7 Habits of Highl
 ## 📦 Setup Instructions
 
 1. **Create a `.env` file** in the project root:
-    ```env
-    PG_PORT=5432
-
-    # DB
-    PG_NAME=life_balance_db
-    
-    # Root user for admin/migration
-    PG_ROOT_USER=postgres
-    PG_ROOT_PASS=postgres_pass
-    
-    # App user
-    PG_USER=app_user
-    PG_PASS=app_pass
-    
-    PG_HOST=localhost
+    ```bash
+    cp .env.example .env  
     ```
 
 2. **Run the development environment**:
@@ -53,7 +40,8 @@ The application is inspired by the principles outlined in *The 7 Habits of Highl
 
 ## 📄 Creating a Liquibase Migration
 
-To create a new migration file:
-
-```bash
-./create_migration.sh your-change-name
+   To create a new migration file:
+   
+   ```bash
+   ./create_migration.sh your-change-name
+   ```
