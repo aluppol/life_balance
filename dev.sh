@@ -58,6 +58,13 @@ case "$ACTION" in
     ./gradlew rollbackCount -PliquibaseCommandValue=1
     ;;
 
+  test)
+    echo "Running unit & integration tests with coverage…"
+    ./gradlew clean test jacocoTestReport
+    REPORT="build/reports/jacoco/test/html/index.html"
+    echo "✔ Coverage report → file://$PWD/$REPORT"
+  ;;
+
   *)
     echo "Invalid option: $ACTION"
     echo "Usage: $0 [up|down|hard-reset|migrate|rollback]"
