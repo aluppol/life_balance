@@ -1,6 +1,9 @@
 package com.luppol.life_balance.services;
 
-import com.luppol.life_balance.dto.PersonDto;
+import com.luppol.life_balance.dto.PersonCreateDto;
+import com.luppol.life_balance.dto.PersonPatchDto;
+import com.luppol.life_balance.dto.PersonPutDto;
+import com.luppol.life_balance.dto.PersonReadDto;
 import com.luppol.life_balance.exceptions.NotFoundException;
 import com.luppol.life_balance.mappers.PersonMapper;
 import com.luppol.life_balance.models.Person;
@@ -14,45 +17,42 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class PersonService implements CrudService<Person, Long, PersonDto> {
+public class PersonService implements CrudService<Long, PersonCreateDto, PersonReadDto, PersonPutDto, PersonPatchDto> {
     private final PersonRepository personRepo;
     private final PersonMapper personMapper;
 
     @Override
-    public Person create(PersonDto dto) {
-        Person person = personMapper.toEntity(dto);
+    public PersonReadDto create(PersonCreateDto dto) {
+        Person person = personMapper.toPerson(dto);
         if (personRepo.existsByFirstNameAndLastName(person.getFirstName(), person.getLastName())) {
             throw new IllegalArgumentException("Duplicate Person");
         }
-        return personRepo.save(person);
+        return personMapper.toReadDto(personRepo.save(person));
+    }
+
+    @Override
+    public PersonReadDto getById(Long id) {
+        return personMapper.toReadDto(getPersonById(id));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Person getById(Long id) {
-        return personRepo.findById(id)
-                .orElseThrow(() -> new NotFoundException(String.format("Person with id %d not found!", id)));
+    public List<PersonReadDto> getAll() {
+        return personRepo.findAll().stream().map(personMapper::toReadDto).toList();
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<Person> getAll() {
-        return personRepo.findAll();
+    public PersonReadDto put(Long id, PersonPutDto dto) {
+        Person person = getPersonById(id);
+        personMapper.putFromDtoToPerson(dto, person);
+        return personMapper.toReadDto(personRepo.save(person));
     }
 
     @Override
-    public Person update(Long id, PersonDto dto) {
-        Person existing = getById(id);
-        Person updated = personMapper.toEntity(dto);
-        updated.setId(existing.getId());
-        return personRepo.save(updated);
-    }
-
-    @Override
-    public Person patch(Long id, PersonDto dto) {
-        Person existing = getById(id);
-        personMapper.merge(dto, existing);
-        return personRepo.save(existing);
+    public PersonReadDto patch(Long id, PersonPatchDto dto) {
+        Person person = getPersonById(id);
+        personMapper.patchFromDtoToPerson(dto, person);
+        return personMapper.toReadDto(personRepo.save(person));
     }
 
     @Override
@@ -63,5 +63,11 @@ public class PersonService implements CrudService<Person, Long, PersonDto> {
     @Override
     public long count() {
         return personRepo.count();
+    }
+
+    @Transactional(readOnly = true)
+    private Person getPersonById(Long id) {
+        return personRepo.findById(id)
+                .orElseThrow(() -> new NotFoundException(String.format("Person with id %d not found!", id)));
     }
 }

@@ -1,6 +1,5 @@
 package com.luppol.life_balance.controllers;
 
-import com.luppol.life_balance.dto.PersonDto;
 import com.luppol.life_balance.mappers.PersonMapper;
 import com.luppol.life_balance.models.Person;
 import com.luppol.life_balance.services.PersonService;

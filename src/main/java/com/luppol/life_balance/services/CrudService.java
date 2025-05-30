@@ -8,16 +8,18 @@ import java.util.List;
 /**
  * Generic contract for basic CRUD operations.
  *
- * @param <E>  Entity type
+ * @param <ReadDto>  Read dto record
  * @param <ID> Identifier type
- * @param <Dto> Dto record for entity
+ * @param <CreateDto>  Read dto record
+ * @param <PutDto>  Read dto record
+ * @param <PatchDto>  Read dto record
  */
-public interface CrudService<E, ID, Dto> {
-    E create(Dto dto);
-    E getById(ID id) throws NotFoundException;
-    List<E> getAll();
-    E update(ID id, Dto dto) throws NotFoundException;
-    E patch(ID id, Dto dto) throws NotFoundException;
+public interface CrudService<ID, CreateDto, ReadDto, PutDto, PatchDto> {
+    ReadDto create(CreateDto dto);
+    ReadDto getById(ID id) throws NotFoundException;
+    List<ReadDto> getAll();
+    ReadDto put(ID id, PutDto dto) throws NotFoundException;
+    ReadDto patch(ID id, PatchDto dto) throws NotFoundException;
     void deleteById(ID id) throws NotFoundException;
     long count();
 }

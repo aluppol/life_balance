@@ -1,6 +1,9 @@
 package com.luppol.life_balance.services;
 
-import com.luppol.life_balance.dto.PersonDto;
+import com.luppol.life_balance.dto.PersonCreateDto;
+import com.luppol.life_balance.dto.PersonPatchDto;
+import com.luppol.life_balance.dto.PersonPutDto;
+import com.luppol.life_balance.dto.PersonReadDto;
 import com.luppol.life_balance.exceptions.NotFoundException;
 import com.luppol.life_balance.mappers.PersonMapper;
 import com.luppol.life_balance.models.Person;
@@ -17,9 +20,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class PersonServiceTest {
@@ -34,21 +35,31 @@ public class PersonServiceTest {
 
     @Test
     void create_rejectDuplicate() {
-        PersonDto dto = new PersonDto(null, "Bob", "Lee", null,null, null, null);
-        Person entity = Person.builder().firstName("Bob").lastName("Lee").build();
+        PersonCreateDto dto = new PersonCreateDto("Bob", "Lee", null,null, null);
+        Person person = Person.builder().firstName("Bob").lastName("Lee").build();
         when(repo.existsByFirstNameAndLastName("Bob", "Lee")).thenReturn(true);
-        when(mapper.toEntity(dto)).thenReturn(entity);
+        when(mapper.toPerson(dto)).thenReturn(person);
         assertThrows(IllegalArgumentException.class, () -> service.create(dto));
     }
 
     @Test
     void create_succeeds() {
-        PersonDto dto = new PersonDto(null, "A", "B", null,null, null, null);
-        Person entity = Person.builder().firstName("A").lastName("B").build();
+        PersonCreateDto createDto = new PersonCreateDto(
+                "A", "B",null, null, null
+        );
+        PersonReadDto readDto = new PersonReadDto(
+                1L, "A", "B", null, null, null, null
+        );
+        Person personToSave = Person.builder().firstName("A").lastName("B").build();
+        Person personSaved = Person.builder().id(1L).firstName("A").lastName("B").build();
+
+        when(mapper.toPerson(createDto)).thenReturn(personToSave);
+        when(mapper.toReadDto(personSaved)).thenReturn(readDto);
+
         when(repo.existsByFirstNameAndLastName("A", "B")).thenReturn(false);
-        when(mapper.toEntity(dto)).thenReturn(entity);
-        when(repo.save(entity)).thenReturn(entity);
-        assertEquals(entity, service.create(dto));
+        when(repo.save(personToSave)).thenReturn(personSaved);
+
+        assertEquals(mapper.toReadDto(personSaved), service.create(createDto));
     }
 
     @Test
@@ -61,79 +72,120 @@ public class PersonServiceTest {
     @Test
     void getById_succeeds() {
         final long ID = 1L;
-        Person entity = new Person();
-        entity.setId(ID);
-        when(repo.findById(ID)).thenReturn(Optional.of(entity));
-        assertEquals(entity, service.getById(ID));
+        Person person = Person.builder().id(ID).build();
+        PersonReadDto readDto = new PersonReadDto(
+                1L, null, null, null, null, null, null
+        );
+
+        when(repo.findById(ID)).thenReturn(Optional.of(person));
+        when(mapper.toReadDto(person)).thenReturn(readDto);
+
+        assertEquals(readDto, service.getById(ID));
     }
 
     @Test
     void getAll() {
         when(repo.findAll()).thenReturn(List.of(new Person(), new Person()));
+        when(mapper.toReadDto(new Person())).thenReturn(new PersonReadDto(
+                null, null, null, null, null, null, null
+        ));
         assertEquals(2, service.getAll().size());
     }
 
     @Test
-    void update_notFound() {
+    void put_notFound() {
         final long ID = 1L;
         when(repo.findById(ID)).thenReturn(Optional.empty());
-        assertThrows(NotFoundException.class, () -> service.update(ID, new PersonDto(null, "", "", null, null, null, null)));
+        assertThrows(NotFoundException.class, () -> service.put(ID, new PersonPutDto(
+                "", "", null, null, null
+        )));
     }
 
     @Test
-    void update_succeeds() {
+    void put_succeeds() {
         final long ID = 1L;
-        Person old = new Person();
-        old.setId(ID);
-        PersonDto dto = new PersonDto(null, "X", "Y", null, null, null, null);
-        Person updated = Person.builder().firstName("X").lastName("Y").build();
-        Person saved = Person.builder().firstName("X").lastName("Y").id(ID).build();
-        when(repo.findById(ID)).thenReturn(Optional.of(old));
-        when(mapper.toEntity(dto)).thenReturn(updated);
-        when(repo.save(saved)).thenReturn(saved);
-        assertEquals(saved, service.update(ID, dto));
-        verify(repo).save(saved);
+        Person personOld = Person.builder().id(ID).build();
+        Person personUpdated = Person.builder().id(ID).firstName("X").lastName("Y").build();
+        PersonPutDto putDto = new PersonPutDto(
+                "X", "Y", null, null, null
+        );
+        PersonReadDto readDto = new PersonReadDto(
+                1L, "X",  "Y", null, null, null, null
+        );
+
+        when(repo.findById(ID)).thenReturn(Optional.of(personOld));
+        when(repo.save(personOld)).thenReturn(personUpdated);
+
+        when(mapper.toReadDto(personUpdated)).thenReturn(readDto);
+        doAnswer(putPersonFromDtoInvocation -> {
+            PersonPutDto dto = putPersonFromDtoInvocation.getArgument(0);
+            Person person = putPersonFromDtoInvocation.getArgument(1);
+
+            person.setFirstName(dto.firstName());
+            person.setLastName(dto.lastName());
+
+            return null;
+        }).when(mapper).putFromDtoToPerson(eq(putDto), eq(personOld));
+
+        assertEquals(readDto, service.put(ID, putDto));
+
+        verify(repo).save(personUpdated);
+        verify(mapper).putFromDtoToPerson(putDto, personOld);
     }
 
     @Test
     void patch_notFound() {
         final long ID = 1L;
         when(repo.findById(ID)).thenReturn(Optional.empty());
-        assertThrows(NotFoundException.class, () -> service.patch(ID, new PersonDto(null, "", "", null, null, null, null)));
+        assertThrows(NotFoundException.class, () -> service.patch(ID, new PersonPatchDto(
+                null, null, null, null, null
+        )));
     }
 
+    @Test
+    void patch_succeeds() {
+        final long ID = 1L;
+        final String FIRST_NAME = "X";
+        final String LAST_NAME = "Y";
 
-    //TODO fix patch test
-//    @Test
-//    void patch_succeeds() {
-//        final long ID = 1L;
-//        final String FIRST_NAME = "X";
-//        final String LAST_NAME = "Y";
-//
-//        Person old = new Person();
-//        old.setId(ID);
-//        old.setMiddleName("Deleted");
-//
-//        PersonDto dto = new PersonDto(null, FIRST_NAME, LAST_NAME, null, null, null, null);
-//
-//        Person expected = Person.builder().firstName(FIRST_NAME).lastName(LAST_NAME).id(ID).middleName(null).build();
-//
-//        when(repo.findById(ID)).thenReturn(Optional.of(old));
-//        when(repo.save(any(Person.class))).thenReturn(expected);
-//
-//       service.patch(ID, dto);
-//
-//        verify(mapper).merge(dto, old);
-//
-//        ArgumentCaptor<Person> personCaptor = ArgumentCaptor.forClass(Person.class);
-//        verify(repo).save(personCaptor.capture());
-//        Person saved = personCaptor.getValue();
-//
-//        assertEquals(ID, saved.getId());
-//        assertEquals(FIRST_NAME, saved.getFirstName());
-//        assertEquals(LAST_NAME, saved.getLastName());
-//        assertNull(saved.getMiddleName());
-//    }
+        Person personOld = Person.builder().id(ID).middleName("Deleted").build();
+        Person personPatched = Person.builder().id(ID).firstName(FIRST_NAME).lastName(LAST_NAME).build();
+
+        PersonPatchDto patchDto = new PersonPatchDto(
+                Optional.of(FIRST_NAME),
+                Optional.of(LAST_NAME),
+                Optional.empty(),
+                null,
+                null
+        );
+        PersonReadDto readDto = new PersonReadDto(
+                ID, FIRST_NAME, LAST_NAME, null, null, null, null
+        );
+
+        when(repo.findById(ID)).thenReturn(Optional.of(personOld));
+        when(repo.save(personOld)).thenReturn(personPatched);
+
+        when(mapper.toReadDto(personPatched)).thenReturn(readDto);
+        doAnswer(patchPersonFromDtoInvocation -> {
+            PersonPatchDto dto = patchPersonFromDtoInvocation.getArgument(0);
+            Person person = patchPersonFromDtoInvocation.getArgument(1);
+
+
+        });
+
+       service.patch(ID, dto);
+
+        verify(mapper).merge(dto, old);
+
+        ArgumentCaptor<Person> personCaptor = ArgumentCaptor.forClass(Person.class);
+        verify(repo).save(personCaptor.capture());
+        Person saved = personCaptor.getValue();
+
+        assertEquals(ID, saved.getId());
+        assertEquals(FIRST_NAME, saved.getFirstName());
+        assertEquals(LAST_NAME, saved.getLastName());
+        assertNull(saved.getMiddleName());
+    }
 
     @Test
     void deleteById_callsRepo() {

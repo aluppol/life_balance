@@ -1,6 +1,6 @@
 package com.luppol.life_balance.dto;
 
-public record PersonDto (
+public record PersonReadDto (
         Long id,
         String firstName,
         String lastName,

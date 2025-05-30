@@ -38,7 +38,6 @@ dependencies {
 	implementation 'org.liquibase:liquibase-core'
 	implementation 'org.postgresql:postgresql'
 	implementation 'org.mapstruct:mapstruct:1.5.5.Final'
-	implementation 'com.github.java-json-tools:json-patch:1.13'
 
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'

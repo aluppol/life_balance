@@ -1,13 +1,9 @@
 package com.luppol.life_balance.controllers;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.fge.jsonpatch.JsonPatchException;
-import com.github.fge.jsonpatch.mergepatch.JsonMergePatch;
-import com.luppol.life_balance.dto.PersonDto;
-import com.luppol.life_balance.mappers.PersonMapper;
-import com.luppol.life_balance.models.Person;
+import com.luppol.life_balance.dto.PersonCreateDto;
+import com.luppol.life_balance.dto.PersonPutDto;
+import com.luppol.life_balance.dto.PersonPatchDto;
+import com.luppol.life_balance.dto.PersonReadDto;
 import com.luppol.life_balance.services.PersonService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,45 +20,36 @@ public class PersonController {
     public static final String BASE_PATH = "/api/persons";
 
     private final PersonService personService;
-    private final PersonMapper personMapper;
-    private final ObjectMapper objectMapper;
 
     @PostMapping
-    public ResponseEntity<PersonDto> create(@Valid @RequestBody PersonDto body) {
-        Person saved = personService.create(body);
+    public ResponseEntity<PersonReadDto> create(@Valid @RequestBody PersonCreateDto body) {
+        PersonReadDto saved = personService.create(body);
         return ResponseEntity
-                .created(URI.create(BASE_PATH + "/" + saved.getId()))
-                .body(personMapper.toDto(saved));
+                .created(URI.create(BASE_PATH + "/" + saved.id()))
+                .body(saved);
     }
 
     @GetMapping
-    public List<PersonDto> getAll() {
-        return personService.getAll().stream()
-                .map(personMapper::toDto)
-                .toList();
+    public ResponseEntity<List<PersonReadDto>> getAll() {
+        return ResponseEntity.ok(personService.getAll());
     }
 
     @GetMapping("/{id}")
-    public PersonDto getById(@PathVariable Long id) {
-        return personMapper.toDto(personService.getById(id));
+    public ResponseEntity<PersonReadDto> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(personService.getById(id));
     }
 
     @PutMapping("/{id}")
-    public PersonDto update(@PathVariable Long id,
-                            @Valid @RequestBody PersonDto body) {
-        return personMapper.toDto(personService.update(id, body));
+    public ResponseEntity<PersonReadDto> put(@PathVariable Long id,
+                            @Valid @RequestBody PersonPutDto body) {
+        return ResponseEntity.ok(personService.put(id, body));
     }
 
-    @PatchMapping(path = "/{id}", consumes = "application/merge-patch+json")
-    public PersonDto patch(
+    @PatchMapping(path = "/{id}")
+    public ResponseEntity<PersonReadDto> patch(
             @PathVariable Long id,
-            @RequestBody JsonMergePatch mergePatch)
-        throws JsonPatchException, JsonProcessingException {
-        PersonDto currentDto = personMapper.toDto(personService.getById(id));
-        JsonNode patchNode = mergePatch.apply(objectMapper.valueToTree(currentDto));
-        PersonDto patchedDto = objectMapper.treeToValue(patchNode, PersonDto.class);
-
-        return personMapper.toDto(personService.patch(id, patchedDto));
+            @Valid @RequestBody PersonPatchDto body) {
+        return ResponseEntity.ok(personService.patch(id, body));
     }
 
     @DeleteMapping("/{id}")
