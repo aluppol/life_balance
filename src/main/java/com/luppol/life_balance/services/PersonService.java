@@ -5,6 +5,7 @@ import com.luppol.life_balance.dto.PersonCreateDto;
 import com.luppol.life_balance.dto.PersonPatchDto;
 import com.luppol.life_balance.dto.PersonPutDto;
 import com.luppol.life_balance.dto.PersonReadDto;
+import com.luppol.life_balance.exceptions.DuplicatePersonException;
 import com.luppol.life_balance.exceptions.NotFoundException;
 import com.luppol.life_balance.mappers.PersonMapper;
 import com.luppol.life_balance.models.Person;
@@ -26,7 +27,10 @@ public class PersonService implements CrudService<Long, PersonCreateDto, PersonR
     public PersonReadDto create(PersonCreateDto dto) {
         Person person = personMapper.toPerson(dto);
         if (personRepo.existsByFirstNameAndLastName(person.getFirstName(), person.getLastName())) {
-            throw new IllegalArgumentException("Duplicate Person");
+            throw new DuplicatePersonException("Duplicate Person");
+        }
+        if (personRepo.existsByPhoneNumber(person.getPhoneNumber())) {
+            throw new DuplicatePersonException("Duplicate phone number");
         }
         return personMapper.toReadDto(personRepo.save(person));
     }

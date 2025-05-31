@@ -39,6 +39,7 @@ dependencies {
 	implementation 'org.postgresql:postgresql'
 	implementation 'org.mapstruct:mapstruct:1.5.5.Final'
 	implementation 'com.fasterxml.jackson.core:jackson-databind'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8'
 
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
@@ -60,7 +61,7 @@ dependencies {
 liquibase {
 	activities {
 		main {
-			changeLogFile 'src/main/resources/db/changelog/db.changelog-master.xml'
+			changeLogFile 'db/changelog/db.changelog-master.xml'
 			url "jdbc:postgresql://${System.getenv('PG_HOST')}:${System.getenv('PG_PORT')}/${System.getenv('PG_NAME')}"
 			username System.getenv('PG_USER')
 			password System.getenv('PG_PASS')

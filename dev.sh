@@ -20,6 +20,7 @@ case "$ACTION" in
     echo "Starting PostgreSQL via Docker Compose..."
     docker compose up -d
 
+    echo "Swagger UI: http://localhost:8080/swagger-ui.html"
     echo "Starting Spring Boot app with Gradle..."
     ./gradlew bootRun
     ;;

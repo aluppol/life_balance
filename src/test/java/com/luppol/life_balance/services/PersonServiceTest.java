@@ -6,6 +6,7 @@ import com.luppol.life_balance.dto.PersonCreateDto;
 import com.luppol.life_balance.dto.PersonPatchDto;
 import com.luppol.life_balance.dto.PersonPutDto;
 import com.luppol.life_balance.dto.PersonReadDto;
+import com.luppol.life_balance.exceptions.DuplicatePersonException;
 import com.luppol.life_balance.exceptions.NotFoundException;
 import com.luppol.life_balance.mappers.PersonMapper;
 import com.luppol.life_balance.models.Person;
@@ -36,12 +37,21 @@ public class PersonServiceTest {
     PersonService service;
 
     @Test
-    void create_rejectDuplicate() {
+    void create_rejectDuplicateName() {
         PersonCreateDto dto = new PersonCreateDto("Bob", "Lee", null,null, null);
         Person person = Person.builder().firstName("Bob").lastName("Lee").build();
         when(repo.existsByFirstNameAndLastName("Bob", "Lee")).thenReturn(true);
         when(mapper.toPerson(dto)).thenReturn(person);
-        assertThrows(IllegalArgumentException.class, () -> service.create(dto));
+        assertThrows(DuplicatePersonException.class, () -> service.create(dto));
+    }
+
+    @Test
+    void create_rejectDuplicatePhone() {
+        PersonCreateDto dto = new PersonCreateDto("Bob", "Lee", null,"45", null);
+        Person person = Person.builder().firstName("Bob").lastName("Jee").phoneNumber("45").build();
+        when(repo.existsByPhoneNumber("45")).thenReturn(true);
+        when(mapper.toPerson(dto)).thenReturn(person);
+        assertThrows(DuplicatePersonException.class, () -> service.create(dto));
     }
 
     @Test

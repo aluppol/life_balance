@@ -27,4 +27,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleValidationException(ConstraintViolationException ex) {
         return ResponseEntity.badRequest().body("Validation failed: " + ex.getMessage());
     }
+
+    @ExceptionHandler(DuplicatePersonException.class)
+    public ResponseEntity<String> handleDuplicatePerson(DuplicatePersonException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+    }
+
 }
