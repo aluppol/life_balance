@@ -1,5 +1,6 @@
 package com.luppol.life_balance.mappers;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.luppol.life_balance.dto.PersonCreateDto;
 import com.luppol.life_balance.dto.PersonPatchDto;
 import com.luppol.life_balance.dto.PersonPutDto;
@@ -10,7 +11,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel="spring")
-public interface PersonMapper {
+public interface PersonMapper extends BaseMapper {
     @Mapping(target = "missionId", source = "mission.id")
     PersonReadDto toReadDto(Person person);
 
@@ -24,11 +25,11 @@ public interface PersonMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "mission", ignore = true)
-    default void patchFromDtoToPerson(PersonPatchDto dto, @MappingTarget Person person) {
-        dto.firstName().ifPresent(person::setFirstName);
-        dto.lastName().ifPresent(person::setLastName);
-        dto.middleName().ifPresent(person::setMiddleName);
-        dto.address().ifPresent(person::setAddress);
-        dto.phoneNumber().ifPresent(person::setPhoneNumber);
+    default void patchFromDtoToPerson(PersonPatchDto dto, JsonNode jsonBody,  @MappingTarget Person person) {
+        patch(jsonBody, "firstName", dto.firstName(), person::setFirstName);
+        patch(jsonBody, "lastName", dto.lastName(), person::setLastName);
+        patch(jsonBody, "middleName", dto.middleName(), person::setMiddleName);
+        patch(jsonBody, "phoneNumber", dto.phoneNumber(), person::setPhoneNumber);
+        patch(jsonBody, "address", dto.address(), person::setAddress);
     }
 }

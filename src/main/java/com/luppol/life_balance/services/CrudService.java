@@ -1,6 +1,7 @@
 package com.luppol.life_balance.services;
 
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.luppol.life_balance.exceptions.NotFoundException;
 
 import java.util.List;
@@ -19,7 +20,7 @@ public interface CrudService<ID, CreateDto, ReadDto, PutDto, PatchDto> {
     ReadDto getById(ID id) throws NotFoundException;
     List<ReadDto> getAll();
     ReadDto put(ID id, PutDto dto) throws NotFoundException;
-    ReadDto patch(ID id, PatchDto dto) throws NotFoundException;
+    ReadDto patch(ID id, PatchDto dto, JsonNode json) throws NotFoundException;
     void deleteById(ID id) throws NotFoundException;
     long count();
 }

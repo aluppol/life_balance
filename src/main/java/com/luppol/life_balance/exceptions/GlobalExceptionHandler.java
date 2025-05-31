@@ -1,5 +1,6 @@
 package com.luppol.life_balance.exceptions;
 
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -20,5 +21,10 @@ public class GlobalExceptionHandler {
         body.put("timestamp", Instant.now());
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<String> handleValidationException(ConstraintViolationException ex) {
+        return ResponseEntity.badRequest().body("Validation failed: " + ex.getMessage());
     }
 }

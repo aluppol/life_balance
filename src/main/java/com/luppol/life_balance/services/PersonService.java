@@ -1,5 +1,6 @@
 package com.luppol.life_balance.services;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.luppol.life_balance.dto.PersonCreateDto;
 import com.luppol.life_balance.dto.PersonPatchDto;
 import com.luppol.life_balance.dto.PersonPutDto;
@@ -49,9 +50,9 @@ public class PersonService implements CrudService<Long, PersonCreateDto, PersonR
     }
 
     @Override
-    public PersonReadDto patch(Long id, PersonPatchDto dto) {
+    public PersonReadDto patch(Long id, PersonPatchDto dto, JsonNode jsonBody) {
         Person person = getPersonById(id);
-        personMapper.patchFromDtoToPerson(dto, person);
+        personMapper.patchFromDtoToPerson(dto, jsonBody, person);
         return personMapper.toReadDto(personRepo.save(person));
     }
 

@@ -1,17 +1,24 @@
 package com.luppol.life_balance.controllers;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.luppol.life_balance.dto.PersonCreateDto;
 import com.luppol.life_balance.dto.PersonPutDto;
 import com.luppol.life_balance.dto.PersonPatchDto;
 import com.luppol.life_balance.dto.PersonReadDto;
 import com.luppol.life_balance.services.PersonService;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
+import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping(PersonController.BASE_PATH)
@@ -20,6 +27,10 @@ public class PersonController {
     public static final String BASE_PATH = "/api/persons";
 
     private final PersonService personService;
+    private final ObjectMapper objectMapper;
+
+    @Autowired
+    private Validator validator;
 
     @PostMapping
     public ResponseEntity<PersonReadDto> create(@Valid @RequestBody PersonCreateDto body) {
@@ -48,8 +59,14 @@ public class PersonController {
     @PatchMapping(path = "/{id}")
     public ResponseEntity<PersonReadDto> patch(
             @PathVariable Long id,
-            @Valid @RequestBody PersonPatchDto body) {
-        return ResponseEntity.ok(personService.patch(id, body));
+            @RequestBody JsonNode jsonBody) {
+        PersonPatchDto dto = objectMapper.convertValue(jsonBody, PersonPatchDto.class);
+        Set<ConstraintViolation<PersonPatchDto>> violations = validator.validate(dto);
+        if (!violations.isEmpty()) {
+           throw new ConstraintViolationException(violations);
+        }
+
+        return ResponseEntity.ok(personService.patch(id, dto, jsonBody));
     }
 
     @DeleteMapping("/{id}")

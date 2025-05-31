@@ -1,5 +1,7 @@
 package com.luppol.life_balance.services;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.luppol.life_balance.dto.PersonCreateDto;
 import com.luppol.life_balance.dto.PersonPatchDto;
 import com.luppol.life_balance.dto.PersonPutDto;
@@ -10,7 +12,6 @@ import com.luppol.life_balance.models.Person;
 import com.luppol.life_balance.repositories.PersonRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -19,11 +20,12 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class PersonServiceTest {
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     @Mock
     PersonRepository repo;
 
@@ -136,10 +138,13 @@ public class PersonServiceTest {
     @Test
     void patch_notFound() {
         final long ID = 1L;
+
         when(repo.findById(ID)).thenReturn(Optional.empty());
-        assertThrows(NotFoundException.class, () -> service.patch(ID, new PersonPatchDto(
-                null, null, null, null, null
-        )));
+        assertThrows(NotFoundException.class, () -> service.patch(
+                ID,
+                new PersonPatchDto(null, null, null, null, null),
+                objectMapper.createObjectNode()
+        ));
     }
 
     @Test
@@ -147,19 +152,29 @@ public class PersonServiceTest {
         final long ID = 1L;
         final String FIRST_NAME = "X";
         final String LAST_NAME = "Y";
+        final String OLD_ADDRESS = "Old Address";
+        final String NEW_ADDRESS = "New Address";
 
-        Person personOld = Person.builder().id(ID).middleName("Deleted").build();
-        Person personPatched = Person.builder().id(ID).firstName(FIRST_NAME).lastName(LAST_NAME).build();
+        JsonNode jsonBody = objectMapper.createObjectNode()
+                .put("address", NEW_ADDRESS)
+                .putNull("middleName");
+        Person personOld = Person.builder()
+                .id(ID)
+                .firstName(FIRST_NAME)
+                .lastName(LAST_NAME)
+                .middleName("Deleted")
+                .address(OLD_ADDRESS)
+                .build();
+        Person personPatched = Person.builder()
+                .id(ID)
+                .firstName(FIRST_NAME)
+                .lastName(LAST_NAME)
+                .address(NEW_ADDRESS)
+                .build();
 
-        PersonPatchDto patchDto = new PersonPatchDto(
-                Optional.of(FIRST_NAME),
-                Optional.of(LAST_NAME),
-                Optional.empty(),
-                null,
-                null
-        );
+        PersonPatchDto patchDto = new PersonPatchDto(null, null, null, null, NEW_ADDRESS);
         PersonReadDto readDto = new PersonReadDto(
-                ID, FIRST_NAME, LAST_NAME, null, null, null, null
+                ID, FIRST_NAME, LAST_NAME, null, null, NEW_ADDRESS, null
         );
 
         when(repo.findById(ID)).thenReturn(Optional.of(personOld));
@@ -168,23 +183,26 @@ public class PersonServiceTest {
         when(mapper.toReadDto(personPatched)).thenReturn(readDto);
         doAnswer(patchPersonFromDtoInvocation -> {
             PersonPatchDto dto = patchPersonFromDtoInvocation.getArgument(0);
-            Person person = patchPersonFromDtoInvocation.getArgument(1);
+            JsonNode json = patchPersonFromDtoInvocation.getArgument(1);
+            Person person = patchPersonFromDtoInvocation.getArgument(2);
 
+            if (json.has("address")) {
+                person.setAddress(dto.address());
+            }
 
-        });
+            if (json.has("middleName")) {
+                person.setMiddleName(dto.middleName());
+            }
 
-       service.patch(ID, dto);
+            return null;
+        }).when(mapper).patchFromDtoToPerson(eq(patchDto), eq(jsonBody), eq(personOld));
 
-        verify(mapper).merge(dto, old);
+        assertEquals(readDto, service.patch(ID, patchDto, jsonBody));
 
-        ArgumentCaptor<Person> personCaptor = ArgumentCaptor.forClass(Person.class);
-        verify(repo).save(personCaptor.capture());
-        Person saved = personCaptor.getValue();
-
-        assertEquals(ID, saved.getId());
-        assertEquals(FIRST_NAME, saved.getFirstName());
-        assertEquals(LAST_NAME, saved.getLastName());
-        assertNull(saved.getMiddleName());
+        verify(mapper).patchFromDtoToPerson(patchDto, jsonBody, personOld);
+        verify(mapper).toReadDto(personPatched);
+        verify(repo).findById(ID);
+        verify(repo).save(personOld);
     }
 
     @Test
