@@ -61,7 +61,7 @@ dependencies {
 liquibase {
 	activities {
 		main {
-			changeLogFile 'db/changelog/db.changelog-master.xml'
+			changelogFile 'db/changelog/db.changelog-master.xml'
 			url "jdbc:postgresql://${System.getenv('PG_HOST')}:${System.getenv('PG_PORT')}/${System.getenv('PG_NAME')}"
 			username System.getenv('PG_USER')
 			password System.getenv('PG_PASS')
