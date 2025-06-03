@@ -11,11 +11,13 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      PG_HOST: localhost
-      PG_PORT: 5432
-      PG_NAME: testdb
-      PG_USER: postgres
-      PG_PASS: postgres
+      PG_HOST: ${{ secrets.PG_HOST }}
+      PG_PORT: ${{ secrets.PG_PORT }}
+      PG_NAME: ${{ secrets.PG_NAME }}
+      POSTGRES_USER: ${{ secrets.PG_ROOT_USER }}
+      POSTGRES_PASSWORD: ${{ secrets.PG_ROOT_PASS }}
+      PG_USER: ${{ secrets.PG_USER }}
+      PG_PASS: ${{ secrets.PG_PASS }}
 
     services:
       postgres:
@@ -31,6 +33,7 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+          -v ${{ github.workspace }}/db/postgres-init.db:/docker-entrypoint-initdb.d/init.db
 
     steps:
       - uses: actions/checkout@v4
@@ -56,3 +59,4 @@ jobs:
         with:
           name: jacoco-report
           path: build/reports/jacoco/html
+
