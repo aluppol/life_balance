@@ -13,6 +13,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.lang.reflect.Method;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -252,5 +254,24 @@ public class PersonMapperTest {
         Person person = Person.builder().firstName("A").build();
         mapper.putFromDtoToPerson(null, person);
         assertThat(person.getFirstName()).isEqualTo("A");
+    }
+
+    @Test
+    void toReadDto_setsMissionIdNullWhenMissionIdIsNull() {
+        Person person = Person.builder()
+                .id(3L)
+                .firstName("Jane")
+                .mission(Mission.builder().id(null).build())
+                .build();
+        PersonReadDto dto = mapper.toReadDto(person);
+        assertThat(dto.missionId()).isNull();
+    }
+
+    @Test
+    void personMissionId_returnsNull_whenPersonIsNull() throws Exception {
+        Object impl = Mappers.getMapper(PersonMapper.class);
+        Method m = impl.getClass().getDeclaredMethod("personMissionId", Person.class);
+        m.setAccessible(true);
+        assertThat(m.invoke(impl, (Person) null)).isNull();
     }
 }
