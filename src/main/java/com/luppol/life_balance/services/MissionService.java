@@ -21,8 +21,12 @@ public class MissionService implements CrudService<Long, MissionCreateDto, Missi
 
     @Override
     public MissionReadDto create(MissionCreateDto dto) {
+        return missionMapper.toReadDto(createEntity(dto));
+    }
+
+    public Mission createEntity(MissionCreateDto dto) {
         Mission mission = missionMapper.toMission(dto);
-        return missionMapper.toReadDto(missionRepo.save(mission));
+        return missionRepo.save(mission);
     }
 
     @Override
@@ -59,8 +63,6 @@ public class MissionService implements CrudService<Long, MissionCreateDto, Missi
     public long count() {
         return missionRepo.count();
     }
-
-    // TODO create CRUD operations for person mission.
 
     @Transactional(readOnly = true)
     private Mission getMissionById(Long id) {

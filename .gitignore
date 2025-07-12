@@ -1,5 +1,7 @@
 .env
 .secrets
+*.class
+bin/
 
 target/
 !.mvn/wrapper/maven-wrapper.jar

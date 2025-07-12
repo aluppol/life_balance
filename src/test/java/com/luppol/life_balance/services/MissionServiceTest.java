@@ -47,7 +47,24 @@ public class MissionServiceTest {
         when(mapper.toReadDto(missionSaved)).thenReturn(readDto);
         when(repo.save(missionToSave)).thenReturn(missionSaved);
 
-        assertEquals(mapper.toReadDto(missionSaved), service.create(createDto));
+        assertEquals(readDto, service.create(createDto));
+        verify(mapper).toMission(createDto);
+        verify(repo).save(missionToSave);
+        verify(mapper).toReadDto(missionSaved);
+    }
+
+    @Test
+    void createEntity_persists_and_returns_entity() {
+        MissionCreateDto dto   = new MissionCreateDto("A");
+        Mission toSave= Mission.builder().text("A").build();
+        Mission saved = Mission.builder().id(1L).text("A").build();
+
+        when(mapper.toMission(dto)).thenReturn(toSave);
+        when(repo.save(toSave)).thenReturn(saved);
+
+        assertEquals(saved, service.createEntity(dto));
+        verify(mapper).toMission(dto);
+        verify(repo).save(toSave);
     }
 
     @Test

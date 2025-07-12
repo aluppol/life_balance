@@ -1,13 +1,13 @@
 package com.luppol.life_balance.services;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.luppol.life_balance.dto.PersonCreateDto;
-import com.luppol.life_balance.dto.PersonPatchDto;
-import com.luppol.life_balance.dto.PersonPutDto;
-import com.luppol.life_balance.dto.PersonReadDto;
+import com.luppol.life_balance.dto.*;
 import com.luppol.life_balance.exceptions.DuplicatePersonException;
 import com.luppol.life_balance.exceptions.NotFoundException;
+import com.luppol.life_balance.exceptions.PersonAlreadyHasMissionException;
+import com.luppol.life_balance.mappers.MissionMapper;
 import com.luppol.life_balance.mappers.PersonMapper;
+import com.luppol.life_balance.models.Mission;
 import com.luppol.life_balance.models.Person;
 import com.luppol.life_balance.repositories.PersonRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +22,8 @@ import java.util.List;
 public class PersonService implements CrudService<Long, PersonCreateDto, PersonReadDto, PersonPutDto, PersonPatchDto> {
     private final PersonRepository personRepo;
     private final PersonMapper personMapper;
+    private final MissionService missionService;
+    private final MissionMapper missionMapper;
 
     @Override
     public PersonReadDto create(PersonCreateDto dto) {
@@ -36,6 +38,7 @@ public class PersonService implements CrudService<Long, PersonCreateDto, PersonR
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PersonReadDto getById(Long id) {
         return personMapper.toReadDto(getPersonById(id));
     }
@@ -70,9 +73,32 @@ public class PersonService implements CrudService<Long, PersonCreateDto, PersonR
         return personRepo.count();
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
+    public MissionReadDto createAndAssignMission (Long personId, MissionCreateDto missionDto) { // TODO tests
+        Person person = getPersonById(personId);
+        validatPersonHasNoMission(person);
+
+        Mission mission = missionService.createEntity(missionDto);
+
+        assignMissionToPerson(person, mission);
+
+        personRepo.save(person);
+
+        return missionMapper.toReadDto(mission);
+    }
+
     private Person getPersonById(Long id) {
         return personRepo.findById(id)
                 .orElseThrow(() -> new NotFoundException(String.format("Person with id %d not found!", id)));
+    }
+
+    private void validatPersonHasNoMission(Person person) {
+        if (person.getMission() != null) {
+            throw new PersonAlreadyHasMissionException(person.getId());
+        }
+    }
+
+    private void assignMissionToPerson(Person person, Mission mission) {
+        person.setMission(mission);
     }
 }
