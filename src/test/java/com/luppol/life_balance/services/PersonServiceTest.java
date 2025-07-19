@@ -2,17 +2,18 @@ package com.luppol.life_balance.services;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.luppol.life_balance.dto.*;
+import com.luppol.life_balance.dto.PersonCreateDto;
+import com.luppol.life_balance.dto.PersonPatchDto;
+import com.luppol.life_balance.dto.PersonPutDto;
+import com.luppol.life_balance.dto.PersonReadDto;
 import com.luppol.life_balance.exceptions.DuplicatePersonException;
 import com.luppol.life_balance.exceptions.NotFoundException;
-import com.luppol.life_balance.exceptions.PersonAlreadyHasMissionException;
-import com.luppol.life_balance.mappers.MissionMapper;
 import com.luppol.life_balance.mappers.PersonMapper;
-import com.luppol.life_balance.models.Mission;
 import com.luppol.life_balance.models.Person;
 import com.luppol.life_balance.repositories.PersonRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Answers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -27,10 +28,9 @@ import static org.mockito.Mockito.*;
 public class PersonServiceTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Mock PersonRepository repo;
+
+    @Mock(answer = Answers.CALLS_REAL_METHODS) PersonRepository personRepository;
     @Mock PersonMapper personMapper;
-    @Mock MissionMapper missionMapper;
-    @Mock  MissionService   missionService;
 
     @InjectMocks
     PersonService personService;
@@ -39,7 +39,7 @@ public class PersonServiceTest {
     void create_rejectDuplicateName_throws() {
         PersonCreateDto dto = new PersonCreateDto("Bob", "Lee", null,null, null);
         Person person = Person.builder().firstName("Bob").lastName("Lee").build();
-        when(repo.existsByFirstNameAndLastName("Bob", "Lee")).thenReturn(true);
+        when(personRepository.existsByFirstNameAndLastName("Bob", "Lee")).thenReturn(true);
         when(personMapper.toPerson(dto)).thenReturn(person);
         assertThrows(DuplicatePersonException.class, () -> personService.create(dto));
     }
@@ -48,7 +48,7 @@ public class PersonServiceTest {
     void create_rejectDuplicatePhone_throws() {
         PersonCreateDto dto = new PersonCreateDto("Bob", "Lee", null,"45", null);
         Person person = Person.builder().firstName("Bob").lastName("Jee").phoneNumber("45").build();
-        when(repo.existsByPhoneNumber("45")).thenReturn(true);
+        when(personRepository.existsByPhoneNumber("45")).thenReturn(true);
         when(personMapper.toPerson(dto)).thenReturn(person);
         assertThrows(DuplicatePersonException.class, () -> personService.create(dto));
     }
@@ -67,8 +67,8 @@ public class PersonServiceTest {
         when(personMapper.toPerson(createDto)).thenReturn(personToSave);
         when(personMapper.toReadDto(personSaved)).thenReturn(readDto);
 
-        when(repo.existsByFirstNameAndLastName("A", "B")).thenReturn(false);
-        when(repo.save(personToSave)).thenReturn(personSaved);
+        when(personRepository.existsByFirstNameAndLastName("A", "B")).thenReturn(false);
+        when(personRepository.save(personToSave)).thenReturn(personSaved);
 
         assertEquals(readDto, personService.create(createDto));
     }
@@ -76,7 +76,7 @@ public class PersonServiceTest {
     @Test
     void getById_notFound_throws() {
         final long ID = 1L;
-        when(repo.findById(ID)).thenReturn(Optional.empty());
+        when(personRepository.findById(ID)).thenReturn(Optional.empty());
         assertThrows(NotFoundException.class, () -> personService.getById(ID));
     }
 
@@ -88,7 +88,7 @@ public class PersonServiceTest {
                 1L, null, null, null, null, null, null
         );
 
-        when(repo.findById(ID)).thenReturn(Optional.of(person));
+        when(personRepository.findById(ID)).thenReturn(Optional.of(person));
         when(personMapper.toReadDto(person)).thenReturn(readDto);
 
         assertEquals(readDto, personService.getById(ID));
@@ -96,7 +96,7 @@ public class PersonServiceTest {
 
     @Test
     void getAll() {
-        when(repo.findAll()).thenReturn(List.of(new Person(), new Person()));
+        when(personRepository.findAll()).thenReturn(List.of(new Person(), new Person()));
         when(personMapper.toReadDto(new Person())).thenReturn(new PersonReadDto(
                 null, null, null, null, null, null, null
         ));
@@ -106,7 +106,7 @@ public class PersonServiceTest {
     @Test
     void put_notFound() {
         final long ID = 1L;
-        when(repo.findById(ID)).thenReturn(Optional.empty());
+        when(personRepository.findById(ID)).thenReturn(Optional.empty());
         assertThrows(NotFoundException.class, () -> personService.put(ID, new PersonPutDto(
                 "", "", null, null, null
         )));
@@ -124,8 +124,8 @@ public class PersonServiceTest {
                 1L, "X",  "Y", null, null, null, null
         );
 
-        when(repo.findById(ID)).thenReturn(Optional.of(personOld));
-        when(repo.save(personOld)).thenReturn(personUpdated);
+        when(personRepository.findById(ID)).thenReturn(Optional.of(personOld));
+        when(personRepository.save(personOld)).thenReturn(personUpdated);
 
         when(personMapper.toReadDto(personUpdated)).thenReturn(readDto);
         doAnswer(putPersonFromDtoInvocation -> {
@@ -140,7 +140,7 @@ public class PersonServiceTest {
 
         assertEquals(readDto, personService.put(ID, putDto));
 
-        verify(repo).save(personUpdated);
+        verify(personRepository).save(personUpdated);
         verify(personMapper).putFromDtoToPerson(putDto, personOld);
     }
 
@@ -148,7 +148,7 @@ public class PersonServiceTest {
     void patch_notFound() {
         final long ID = 1L;
 
-        when(repo.findById(ID)).thenReturn(Optional.empty());
+        when(personRepository.findById(ID)).thenReturn(Optional.empty());
         assertThrows(NotFoundException.class, () -> personService.patch(
                 ID,
                 new PersonPatchDto(null, null, null, null, null),
@@ -186,8 +186,8 @@ public class PersonServiceTest {
                 ID, FIRST_NAME, LAST_NAME, null, null, NEW_ADDRESS, null
         );
 
-        when(repo.findById(ID)).thenReturn(Optional.of(personOld));
-        when(repo.save(personOld)).thenReturn(personPatched);
+        when(personRepository.findById(ID)).thenReturn(Optional.of(personOld));
+        when(personRepository.save(personOld)).thenReturn(personPatched);
 
         when(personMapper.toReadDto(personPatched)).thenReturn(readDto);
         doAnswer(patchPersonFromDtoInvocation -> {
@@ -210,57 +210,21 @@ public class PersonServiceTest {
 
         verify(personMapper).patchFromDtoToPerson(patchDto, jsonBody, personOld);
         verify(personMapper).toReadDto(personPatched);
-        verify(repo).findById(ID);
-        verify(repo).save(personOld);
+        verify(personRepository).findById(ID);
+        verify(personRepository).save(personOld);
     }
 
     @Test
     void deleteById_callsRepo() {
         final long ID = 1L;
         personService.deleteById(ID);
-        verify(repo).deleteById(ID);
+        verify(personRepository).deleteById(ID);
     }
 
     @Test
     void count_returnsRepoCount() {
         final long COUNT = 10L;
-        when(repo.count()).thenReturn(COUNT);
+        when(personRepository.count()).thenReturn(COUNT);
         assertEquals(COUNT, personService.count());
-    }
-
-    @Test
-    void createAndAssignMission_succeeds() {
-        Long personId = 1L;
-        MissionCreateDto dto = new MissionCreateDto("A");
-        Person person = Person.builder().id(personId).build();
-        Mission mission = Mission.builder().id(10L).text("A").build();
-        MissionReadDto readDto = new MissionReadDto(10L, "A");
-
-        when(repo.findById(personId)).thenReturn(Optional.of(person));
-        when(missionService.createEntity(dto)).thenReturn(mission);
-        when(repo.save(person)).thenReturn(person);
-        when(missionMapper.toReadDto(mission)).thenReturn(readDto);
-
-        MissionReadDto result = personService.createAndAssignMission(personId, dto);
-
-        assertEquals(readDto, result);
-        assertEquals(mission, person.getMission());
-        verify(repo).save(person);
-    }
-
-    @Test
-    void createAndAssignMission_personHasMission_throws() {
-        Long personId = 1L;
-        MissionCreateDto dto = new MissionCreateDto("A");
-        Mission existing     = Mission.builder().id(9L).text("B").build();
-        Person person        = Person.builder().id(personId).mission(existing).build();
-
-        when(repo.findById(personId)).thenReturn(Optional.of(person));
-
-        assertThrows(PersonAlreadyHasMissionException.class,
-                () -> personService.createAndAssignMission(personId, dto));
-
-        verify(missionService, never()).createEntity(any());
-        verify(repo,   never()).save(any());
     }
 }

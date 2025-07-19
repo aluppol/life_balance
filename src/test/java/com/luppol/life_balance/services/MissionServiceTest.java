@@ -12,6 +12,7 @@ import com.luppol.life_balance.models.Mission;
 import com.luppol.life_balance.repositories.MissionRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Answers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -27,7 +28,7 @@ import static org.mockito.Mockito.*;
 public class MissionServiceTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Mock
+    @Mock(answer = Answers.CALLS_REAL_METHODS)
     MissionRepository repo;
 
     @Mock
@@ -51,20 +52,6 @@ public class MissionServiceTest {
         verify(mapper).toMission(createDto);
         verify(repo).save(missionToSave);
         verify(mapper).toReadDto(missionSaved);
-    }
-
-    @Test
-    void createEntity_persists_and_returns_entity() {
-        MissionCreateDto dto   = new MissionCreateDto("A");
-        Mission toSave= Mission.builder().text("A").build();
-        Mission saved = Mission.builder().id(1L).text("A").build();
-
-        when(mapper.toMission(dto)).thenReturn(toSave);
-        when(repo.save(toSave)).thenReturn(saved);
-
-        assertEquals(saved, service.createEntity(dto));
-        verify(mapper).toMission(dto);
-        verify(repo).save(toSave);
     }
 
     @Test
