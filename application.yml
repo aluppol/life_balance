@@ -1,4 +1,7 @@
 spring:
+  profiles:
+    active: stub
+
   datasource:
     url: jdbc:postgresql://${PG_HOST}:${PG_PORT}/${PG_NAME}
     username: ${PG_USER}
@@ -19,3 +22,23 @@ spring:
     change-log: classpath:db/changelog/db.changelog-master.xml
     default-schema: core             # apply changesets to core
     liquibase-schema: public         # store metadata in public
+
+# ─── prod profile : Google OIDC + bearer‑token validation ────────
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope: openid, profile, email
+
+        provider:
+          google:
+            issuer-uri: https://accounts.google.com

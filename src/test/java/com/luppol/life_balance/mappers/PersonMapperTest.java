@@ -30,6 +30,7 @@ public class PersonMapperTest {
                 .id(42L)
                 .firstName("A")
                 .lastName("B")
+                .email("a.b@gmail.com")
                 .middleName("C")
                 .phoneNumber("123")
                 .address("addr")
@@ -38,6 +39,7 @@ public class PersonMapperTest {
         assertThat(dto.id()).isEqualTo(42L);
         assertThat(dto.firstName()).isEqualTo("A");
         assertThat(dto.lastName()).isEqualTo("B");
+        assertThat(dto.email()).isEqualTo("a.b@gmail.com");
         assertThat(dto.middleName()).isEqualTo("C");
         assertThat(dto.phoneNumber()).isEqualTo("123");
         assertThat(dto.address()).isEqualTo("addr");
@@ -45,10 +47,11 @@ public class PersonMapperTest {
 
     @Test
     void toPerson_mapsCreateDto() {
-        PersonCreateDto dto = new PersonCreateDto("X", "Y", "Z", "1234", "address");
+        PersonCreateDto dto = new PersonCreateDto("X", "Y", "x.y@gmail.com", "Z", "1234", "address");
         Person person = mapper.toPerson(dto);
         assertThat(person.getFirstName()).isEqualTo("X");
         assertThat(person.getLastName()).isEqualTo("Y");
+        assertThat(person.getEmail()).isEqualTo("x.y@gmail.com");
         assertThat(person.getMiddleName()).isEqualTo("Z");
         assertThat(person.getPhoneNumber()).isEqualTo("1234");
         assertThat(person.getAddress()).isEqualTo("address");
@@ -56,11 +59,12 @@ public class PersonMapperTest {
 
     @Test
     void putFromDtoToPerson_overwritesAllFields() {
-        PersonPutDto putDto = new PersonPutDto("M", "N", "O", "5678", "addr2");
+        PersonPutDto putDto = new PersonPutDto("M", "N", "m.n@gmail.com", "O", "5678", "addr2");
         Person person = Person.builder().firstName("X").lastName("Y").middleName("Z").phoneNumber("0000").address("old").build();
         mapper.putFromDtoToPerson(putDto, person);
         assertThat(person.getFirstName()).isEqualTo("M");
         assertThat(person.getLastName()).isEqualTo("N");
+        assertThat(person.getEmail()).isEqualTo("m.n@gmail.com");
         assertThat(person.getMiddleName()).isEqualTo("O");
         assertThat(person.getPhoneNumber()).isEqualTo("5678");
         assertThat(person.getAddress()).isEqualTo("addr2");
@@ -68,7 +72,7 @@ public class PersonMapperTest {
 
     @Test
     void patchFromDtoToPerson_onlyPatchedFieldsAreChanged() {
-        PersonPatchDto patchDto = new PersonPatchDto("Patched", null, null, null, null);
+        PersonPatchDto patchDto = new PersonPatchDto("Patched", null, null, null, null, null);
         ObjectNode json = objectMapper.createObjectNode();
         json.put("firstName", "Patched");
         Person person = Person.builder().firstName("Orig").lastName("Last").build();
@@ -80,7 +84,7 @@ public class PersonMapperTest {
 
     @Test
     void patchFromDtoToPerson_updatesOnlyPresentFields() {
-        PersonPatchDto dto = new PersonPatchDto("Alice", "Johnson", null, null, null);
+        PersonPatchDto dto = new PersonPatchDto("Alice", "Johnson", "alice.johnson@gmail.com", null, null, null);
         ObjectNode json = objectMapper.createObjectNode();
         json.put("firstName", "Alice");
         json.put("lastName", "Johnson");
@@ -88,6 +92,7 @@ public class PersonMapperTest {
         Person person = new Person();
         person.setFirstName("OldName");
         person.setLastName("OldLast");
+        person.setEmail("alice.johnson@gmail.com");
         person.setMiddleName("M");
         person.setPhoneNumber("111");
         person.setAddress("Old Address");
@@ -96,6 +101,7 @@ public class PersonMapperTest {
 
         assertEquals("Alice", person.getFirstName());
         assertEquals("Johnson", person.getLastName());
+        assertEquals("alice.johnson@gmail.com", person.getEmail());
         assertEquals("M", person.getMiddleName()); // unchanged
         assertEquals("111", person.getPhoneNumber());
         assertEquals("Old Address", person.getAddress());
@@ -103,7 +109,7 @@ public class PersonMapperTest {
 
     @Test
     void patchFromDtoToPerson_clearsFieldWhenExplicitlyNull() {
-        PersonPatchDto dto = new PersonPatchDto(null, null, null, null, null);
+        PersonPatchDto dto = new PersonPatchDto(null, null,  null, null, null, null);
         ObjectNode json = objectMapper.createObjectNode();
         json.putNull("middleName");
 
@@ -117,7 +123,7 @@ public class PersonMapperTest {
 
     @Test
     void patchFromDtoToPerson_doesNothingIfFieldNotPresentInJson() {
-        PersonPatchDto dto = new PersonPatchDto("ShouldNotApply", null, null, null, null);
+        PersonPatchDto dto = new PersonPatchDto("ShouldNotApply", null, null,  null, null, null);
         ObjectNode json = objectMapper.createObjectNode();
 
         Person person = new Person();
@@ -130,10 +136,11 @@ public class PersonMapperTest {
 
     @Test
     void patchFromDtoToPerson_updatesAllFields() {
-        PersonPatchDto dto = new PersonPatchDto("A", "B", "C", "D", "E");
+        PersonPatchDto dto = new PersonPatchDto("A", "B", "a.b@gmail.com", "C", "D", "E");
         ObjectNode json = objectMapper.createObjectNode();
         json.put("firstName", "A");
         json.put("lastName", "B");
+        json.put("email", "a.b@gmail.com");
         json.put("middleName", "C");
         json.put("phoneNumber", "D");
         json.put("address", "E");
@@ -144,16 +151,18 @@ public class PersonMapperTest {
         assertEquals("A", person.getFirstName());
         assertEquals("B", person.getLastName());
         assertEquals("C", person.getMiddleName());
+        assertEquals("a.b@gmail.com", person.getEmail());
         assertEquals("D", person.getPhoneNumber());
         assertEquals("E", person.getAddress());
     }
 
     @Test
     void patchFromDtoToPerson_clearsAllFieldsWithExplicitNulls() {
-        PersonPatchDto dto = new PersonPatchDto(null, null, null, null, null);
+        PersonPatchDto dto = new PersonPatchDto(null, null, null, null, null, null);
         ObjectNode json = objectMapper.createObjectNode();
         json.putNull("firstName");
         json.putNull("lastName");
+        json.putNull("email");
         json.putNull("middleName");
         json.putNull("phoneNumber");
         json.putNull("address");
@@ -166,6 +175,7 @@ public class PersonMapperTest {
 
         assertNull(person.getFirstName());
         assertNull(person.getLastName());
+        assertNull(person.getEmail());
         assertNull(person.getMiddleName());
         assertNull(person.getPhoneNumber());
         assertNull(person.getAddress());
@@ -173,7 +183,7 @@ public class PersonMapperTest {
 
     @Test
     void patchFromDtoToPerson_doesNothingWhenNoFieldsPresent() {
-        PersonPatchDto dto = new PersonPatchDto("newFirst", "newLast", "newMid", "newPhone", "newAddr");
+        PersonPatchDto dto = new PersonPatchDto("newFirst", "newLast", "new.email@google.com", "newMid", "newPhone", "newAddr");
         ObjectNode json = objectMapper.createObjectNode();
 
         Person person = new Person();
@@ -208,14 +218,14 @@ public class PersonMapperTest {
 
     @Test
     void toPerson_ignoresMissionOnCreate() {
-        PersonCreateDto dto = new PersonCreateDto("X", "Y", "Z", "1234", "address");
+        PersonCreateDto dto = new PersonCreateDto("X", "Y", "x.y@gmail.com", "Z", "1234", "address");
         Person person = mapper.toPerson(dto);
         assertThat(person.getMission()).isNull();
     }
 
     @Test
     void putFromDtoToPerson_doesNotOverwriteMission() {
-        PersonPutDto dto = new PersonPutDto("A", "B", "C", "D", "E");
+        PersonPutDto dto = new PersonPutDto("A", "B", "a.b@gmail.com", "C", "D", "E");
         Person original = Person.builder()
                 .mission(Mission.builder().id(42L).build())
                 .build();
@@ -226,7 +236,7 @@ public class PersonMapperTest {
 
     @Test
     void patchFromDtoToPerson_doesNotAffectMission() {
-        PersonPatchDto dto = new PersonPatchDto("F", null, null, null, null);
+        PersonPatchDto dto = new PersonPatchDto("F", null,null, null, null, null);
         ObjectNode json = objectMapper.createObjectNode();
         json.put("firstName", "F");
 

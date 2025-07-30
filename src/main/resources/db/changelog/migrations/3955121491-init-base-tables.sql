@@ -10,9 +10,10 @@ CREATE TABLE core.Person (
     id SERIAL PRIMARY KEY,
     first_name VARCHAR(128) NOT NULL,
     last_name VARCHAR (128) NOT NULL,
-    middle_name VARCHAR(256),
+    email VARCHAR(255) NOT NULL UNIQUE,
+    middle_name VARCHAR(255),
     phone_number VARCHAR(20) UNIQUE,
-    address VARCHAR(256),
+    address VARCHAR(255),
     mission_id INTEGER UNIQUE,
     CONSTRAINT fk_person_mission FOREIGN KEY (mission_id) REFERENCES  core.Mission(id) ON UPDATE CASCADE ON DELETE SET NULL
 );
@@ -35,14 +36,14 @@ CREATE TABLE core.Quote (
     id SERIAL PRIMARY KEY,
     person_id  INTEGER NOT NULL,
     text VARCHAR (2048)  NOT NULL,
-    author VARCHAR (256),
+    author VARCHAR (255),
     CONSTRAINT fk_quote_person FOREIGN KEY (person_id) REFERENCES core.Person(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE core.Note (
     id SERIAL PRIMARY KEY,
     person_id  INTEGER NOT NULL,
-    title VARCHAR (256) NOT NULL,
+    title VARCHAR (255) NOT NULL,
     text VARCHAR(2048),
     CONSTRAINT fk_note_person FOREIGN KEY (person_id) REFERENCES core.Person(id) ON UPDATE CASCADE ON DELETE CASCADE
 );

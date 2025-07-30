@@ -1,59 +1,24 @@
 package com.luppol.life_balance.controllers;
 
 import com.jayway.jsonpath.JsonPath;
-import com.luppol.life_balance.mappers.PersonMapper;
-import com.luppol.life_balance.models.Person;
-import com.luppol.life_balance.repositories.PersonRepository;
-import com.luppol.life_balance.services.PersonService;
-import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.any;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-@Testcontainers
-@SpringBootTest
-@AutoConfigureMockMvc
-@Transactional
-public class PersonControllerIT {
 
-    @Autowired
-    MockMvc mvc;
-
-    @Container
-    static final PostgreSQLContainer<?> db = new PostgreSQLContainer<>("postgres:16-alpine")
-            .withInitScript("db/create-schema.sql");
-
-    @DynamicPropertySource
-    static void cfg(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", db::getJdbcUrl);
-        registry.add("spring.datasource.username", db::getUsername);
-        registry.add("spring.datasource.password", db::getPassword);
-    }
-
+public class PersonControllerIT extends AbstractControllerIT{
     @Test
     void create_successful() throws Exception {
         mvc.perform(post(PersonController.BASE_PATH)
                 .contentType("application/json")
                 .content("""
-                        {"firstName": "John", "lastName": "Snow"}
+                        {"firstName": "John", "lastName": "Snow", "email": "john.snow@gmail.com"}
                         """))
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"))
                 .andExpect(jsonPath("$.firstName").value("John"))
                 .andExpect(jsonPath("$.lastName").value("Snow"))
+                .andExpect(jsonPath("$.email").value("john.snow@gmail.com"))
                 .andExpect(jsonPath("$.id").isNumber());
     }
 
@@ -72,7 +37,7 @@ public class PersonControllerIT {
         mvc.perform(post(PersonController.BASE_PATH)
             .contentType("application/json")
             .content("""
-                {"firstName": "John", "lastName": "Doe"}
+                {"firstName": "John", "lastName": "Doe", "email": "john.doe@gmail.com"}
             """))
             .andExpect(status()
             .isCreated());
@@ -88,7 +53,7 @@ public class PersonControllerIT {
         String response = mvc.perform(post(PersonController.BASE_PATH)
             .contentType("application/json")
             .content("""
-                {"firstName": "Jane", "lastName": "Smith"}
+                {"firstName": "Jane", "lastName": "Smith", "email": "jane.smith@gmail.com"}
             """)).andReturn().getResponse().getContentAsString();
         long id = ((Number) JsonPath.read(response, "$.id")).longValue();
 
@@ -108,14 +73,14 @@ public class PersonControllerIT {
         String response = mvc.perform(post(PersonController.BASE_PATH)
             .contentType("application/json")
             .content("""
-                {"firstName": "Old", "lastName": "Name"}
+                {"firstName": "Old", "lastName": "Name", "email": "old.name@gmail.com"}
             """)).andReturn().getResponse().getContentAsString();
         long id = ((Number) JsonPath.read(response, "$.id")).longValue();
 
         mvc.perform(put(PersonController.BASE_PATH + "/{id}", id)
             .contentType("application/json")
             .content("""
-                {"firstName": "New", "lastName": "Name"}
+                {"firstName": "New", "lastName": "Name", "email": "new.name@gmail.com"}
             """))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.firstName").value("New"));
@@ -126,18 +91,19 @@ public class PersonControllerIT {
         String response = mvc.perform(post(PersonController.BASE_PATH)
             .contentType("application/json")
             .content("""
-                {"firstName": "Initial", "lastName": "Value"}
+                {"firstName": "Initial", "lastName": "Value", "email": "initial.value@gmail.com"}
             """)).andReturn().getResponse().getContentAsString();
         long id = ((Number) JsonPath.read(response, "$.id")).longValue();
 
         mvc.perform(patch(PersonController.BASE_PATH + "/{id}", id)
             .contentType("application/json")
             .content("""
-                {"firstName": "Patched"}
+                {"firstName": "Patched", "email": "patched.value@gmail.com"}
             """))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.firstName").value("Patched"))
-            .andExpect(jsonPath("$.lastName").value("Value"));
+            .andExpect(jsonPath("$.lastName").value("Value"))
+            .andExpect(jsonPath("$.email").value("patched.value@gmail.com"));
     }
 
     @Test
@@ -145,7 +111,7 @@ public class PersonControllerIT {
         String response = mvc.perform(post(PersonController.BASE_PATH)
             .contentType("application/json")
             .content("""
-                {"firstName": "A", "lastName": "B"}
+                {"firstName": "A", "lastName": "B", "email": "a.b@gmail.com"}
             """)).andReturn().getResponse().getContentAsString();
         long id = ((Number) JsonPath.read(response, "$.id")).longValue();
 
@@ -162,7 +128,7 @@ public class PersonControllerIT {
         String response = mvc.perform(post(PersonController.BASE_PATH)
             .contentType("application/json")
             .content("""
-                {"firstName": "Del", "lastName": "Eted"}
+                {"firstName": "Del", "lastName": "Eted", "email": "gg@gmail.com"}
             """)).andReturn().getResponse().getContentAsString();
         long id = ((Number) JsonPath.read(response, "$.id")).longValue();
 

@@ -4,6 +4,7 @@ public record PersonReadDto (
         Long id,
         String firstName,
         String lastName,
+        String email,
         String middleName,
         String phoneNumber,
         String address,

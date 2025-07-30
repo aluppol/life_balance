@@ -60,7 +60,8 @@ public class PersonController {
                 required = true,
                 content = @Content(schema = @Schema(implementation = PersonCreateDto.class))
             )
-            @Valid @RequestBody PersonCreateDto body) {
+            @Valid @RequestBody PersonCreateDto body
+    ) {
         PersonReadDto saved = personService.create(body);
         return ResponseEntity
                 .created(URI.create(BASE_PATH + "/" + saved.id()))
@@ -99,7 +100,8 @@ public class PersonController {
     @GetMapping("/{id}")
     public ResponseEntity<PersonReadDto> getById(
             @Parameter(description = "ID of the person to retrieve", required = true)
-            @PathVariable Long id) {
+            @PathVariable Long id
+    ) {
         return ResponseEntity.ok(personService.getById(id));
     }
 
@@ -131,7 +133,8 @@ public class PersonController {
                 required = true,
                 content = @Content(schema = @Schema(implementation = PersonPutDto.class))
             )
-            @Valid @RequestBody PersonPutDto body) {
+            @Valid @RequestBody PersonPutDto body
+    ) {
         return ResponseEntity.ok(personService.put(id, body));
     }
 
@@ -163,7 +166,8 @@ public class PersonController {
                 required = true,
                 content = @Content(schema = @Schema(implementation = PersonPatchDto.class))
             )
-            @RequestBody JsonNode jsonBody) {
+            @RequestBody JsonNode jsonBody
+    ) {
         PersonPatchDto dto = objectMapper.convertValue(jsonBody, PersonPatchDto.class);
         Set<ConstraintViolation<PersonPatchDto>> violations = validator.validate(dto);
         if (!violations.isEmpty()) {
@@ -190,7 +194,8 @@ public class PersonController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @Parameter(description = "ID of the person to delete", required = true)
-            @PathVariable Long id) {
+            @PathVariable Long id
+    ) {
         personService.deleteById(id);
         return ResponseEntity.noContent().build();
     }

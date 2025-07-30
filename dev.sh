@@ -4,7 +4,7 @@ set -e
 ACTION=$1
 
 if [ -z "$ACTION" ]; then
-  echo "Usage: $0 [up|down|hard-reset|migrate|rollback]"
+  echo "Usage: $0 [up|down|hard-reset|migrate|rollback|test]"
   exit 1
 fi
 

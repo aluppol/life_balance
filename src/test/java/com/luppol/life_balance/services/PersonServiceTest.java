@@ -37,7 +37,7 @@ public class PersonServiceTest {
 
     @Test
     void create_rejectDuplicateName_throws() {
-        PersonCreateDto dto = new PersonCreateDto("Bob", "Lee", null,null, null);
+        PersonCreateDto dto = new PersonCreateDto("Bob", "Lee", "bob.lee@gmail.com", null,null, null);
         Person person = Person.builder().firstName("Bob").lastName("Lee").build();
         when(personRepository.existsByFirstNameAndLastName("Bob", "Lee")).thenReturn(true);
         when(personMapper.toPerson(dto)).thenReturn(person);
@@ -46,7 +46,7 @@ public class PersonServiceTest {
 
     @Test
     void create_rejectDuplicatePhone_throws() {
-        PersonCreateDto dto = new PersonCreateDto("Bob", "Lee", null,"45", null);
+        PersonCreateDto dto = new PersonCreateDto("Bob", "Lee", "bob.lee@gmail.com", null,"45", null);
         Person person = Person.builder().firstName("Bob").lastName("Jee").phoneNumber("45").build();
         when(personRepository.existsByPhoneNumber("45")).thenReturn(true);
         when(personMapper.toPerson(dto)).thenReturn(person);
@@ -56,13 +56,13 @@ public class PersonServiceTest {
     @Test
     void create_succeeds() {
         PersonCreateDto createDto = new PersonCreateDto(
-                "A", "B",null, null, null
+                "A", "B", "bob.lee@gmail.com",null, null, null
         );
         PersonReadDto readDto = new PersonReadDto(
-                1L, "A", "B", null, null, null, null
+                1L, "A", "B", "bob.lee@gmail.com", null, null, null, null
         );
-        Person personToSave = Person.builder().firstName("A").lastName("B").build();
-        Person personSaved = Person.builder().id(1L).firstName("A").lastName("B").build();
+        Person personToSave = Person.builder().firstName("A").lastName("B").email("bob.lee@gmail.com").build();
+        Person personSaved = Person.builder().id(1L).firstName("A").lastName("B").email("bob.lee@gmail.com").build();
 
         when(personMapper.toPerson(createDto)).thenReturn(personToSave);
         when(personMapper.toReadDto(personSaved)).thenReturn(readDto);
@@ -85,7 +85,7 @@ public class PersonServiceTest {
         final long ID = 1L;
         Person person = Person.builder().id(ID).build();
         PersonReadDto readDto = new PersonReadDto(
-                1L, null, null, null, null, null, null
+                1L, null, null, null, null, null, null, null
         );
 
         when(personRepository.findById(ID)).thenReturn(Optional.of(person));
@@ -98,7 +98,7 @@ public class PersonServiceTest {
     void getAll() {
         when(personRepository.findAll()).thenReturn(List.of(new Person(), new Person()));
         when(personMapper.toReadDto(new Person())).thenReturn(new PersonReadDto(
-                null, null, null, null, null, null, null
+                null, null, null, null, null, null, null, null
         ));
         assertEquals(2, personService.getAll().size());
     }
@@ -108,7 +108,7 @@ public class PersonServiceTest {
         final long ID = 1L;
         when(personRepository.findById(ID)).thenReturn(Optional.empty());
         assertThrows(NotFoundException.class, () -> personService.put(ID, new PersonPutDto(
-                "", "", null, null, null
+                "", "", "", null, null, null
         )));
     }
 
@@ -118,10 +118,10 @@ public class PersonServiceTest {
         Person personOld = Person.builder().id(ID).build();
         Person personUpdated = Person.builder().id(ID).firstName("X").lastName("Y").build();
         PersonPutDto putDto = new PersonPutDto(
-                "X", "Y", null, null, null
+                "X", "Y", "X.Y@gmail.com", null, null, null
         );
         PersonReadDto readDto = new PersonReadDto(
-                1L, "X",  "Y", null, null, null, null
+                1L, "X",  "Y", "X.Y@gmail.com", null, null, null, null
         );
 
         when(personRepository.findById(ID)).thenReturn(Optional.of(personOld));
@@ -151,7 +151,7 @@ public class PersonServiceTest {
         when(personRepository.findById(ID)).thenReturn(Optional.empty());
         assertThrows(NotFoundException.class, () -> personService.patch(
                 ID,
-                new PersonPatchDto(null, null, null, null, null),
+                new PersonPatchDto(null, null, null, null, null, null),
                 objectMapper.createObjectNode()
         ));
     }
@@ -161,6 +161,7 @@ public class PersonServiceTest {
         final long ID = 1L;
         final String FIRST_NAME = "X";
         final String LAST_NAME = "Y";
+        final String EMAIL = "X.Y@gmail.com";
         final String OLD_ADDRESS = "Old Address";
         final String NEW_ADDRESS = "New Address";
 
@@ -171,6 +172,7 @@ public class PersonServiceTest {
                 .id(ID)
                 .firstName(FIRST_NAME)
                 .lastName(LAST_NAME)
+                .email(EMAIL)
                 .middleName("Deleted")
                 .address(OLD_ADDRESS)
                 .build();
@@ -178,12 +180,13 @@ public class PersonServiceTest {
                 .id(ID)
                 .firstName(FIRST_NAME)
                 .lastName(LAST_NAME)
+                .email(EMAIL)
                 .address(NEW_ADDRESS)
                 .build();
 
-        PersonPatchDto patchDto = new PersonPatchDto(null, null, null, null, NEW_ADDRESS);
+        PersonPatchDto patchDto = new PersonPatchDto(null,  null,null, null, null, NEW_ADDRESS);
         PersonReadDto readDto = new PersonReadDto(
-                ID, FIRST_NAME, LAST_NAME, null, null, NEW_ADDRESS, null
+                ID, FIRST_NAME, LAST_NAME, EMAIL, null, null, NEW_ADDRESS, null
         );
 
         when(personRepository.findById(ID)).thenReturn(Optional.of(personOld));

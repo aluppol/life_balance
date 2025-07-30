@@ -7,4 +7,5 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 <include file="db/changelog/migrations/3955121491-init-base-tables.sql"/>
 
+    <include file="db/changelog/migrations/3962838107-update-person-add-email.sql"/>
 </databaseChangeLog>

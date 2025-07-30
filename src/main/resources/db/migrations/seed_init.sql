@@ -1,17 +1,17 @@
 -- up
 
 -- Insert data into Person (10 rows)
-INSERT INTO Person (first_name, last_name, middle_name, phone_number, address) VALUES
-('John', 'Doe', 'Michael', 1234567890, '123 Main St'),
-('Jane', 'Smith', 'Elizabeth', 2345678901, '456 Oak St'),
-('Alice', 'Johnson', 'Marie', 3456789012, '789 Pine St'),
-('Bob', 'Brown', 'Alexander', 4567890123, '101 Maple St'),
-('Charlie', 'Davis', 'Nathan', 5678901234, '202 Birch St'),
-('Diana', 'Wilson', 'Claire', 6789012345, '303 Cedar St'),
-('Ethan', 'Moore', 'James', 7890123456, '404 Walnut St'),
-('Fiona', 'Taylor', 'Rose', 8901234567, '505 Cherry St'),
-('George', 'Anderson', 'Robert', 9012345678, '606 Spruce St'),
-('Hannah', 'Martinez', 'Grace', 1230984567, '707 Elm St');
+INSERT INTO Person (first_name, last_name, middle_name, phone_number, email, address) VALUES
+('John', 'Doe', 'Michael', 1234567890, 'john.doe@gmail.com', '123 Main St'),
+('Jane', 'Smith', 'Elizabeth', 2345678901, 'jane.smith@gmail.com', '456 Oak St'),
+('Alice', 'Johnson', 'Marie', 3456789012, 'alice.johnson@gmail.com', '789 Pine St'),
+('Bob', 'Brown', 'Alexander', 4567890123, 'bob.brown@gmail.com', '101 Maple St'),
+('Charlie', 'Davis', 'Nathan', 5678901234, 'charlie.davis@gmail.com', '202 Birch St'),
+('Diana', 'Wilson', 'Claire', 6789012345, 'diana.wilson@gmail.com', '303 Cedar St'),
+('Ethan', 'Moore', 'James', 7890123456, 'ethan.moore@gmail.com', '404 Walnut St'),
+('Fiona', 'Taylor', 'Rose', 8901234567, 'fiona.taylor@gmail.com', '505 Cherry St'),
+('George', 'Anderson', 'Robert', 9012345678, 'george.anderson@gmail.com', '606 Spruce St'),
+('Hannah', 'Martinez', 'Grace', 1230984567, 'hannah.marinez@gmail.com', '707 Elm St');
 
 -- Insert data into Enterprise (5 rows)
 INSERT INTO Enterprise (name, description) VALUES

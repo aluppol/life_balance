@@ -13,7 +13,10 @@ public record PersonPatchDto(
         @Size(max = 128)
         @Pattern(regexp = "^\\s*\\S.*$", message = "Must not be blank")
         String lastName,
-        @Size(max = 256) String middleName,
+        @Size(max = 255)
+        @Pattern(regexp = "^\\s*\\S.*$", message = "Must not be blank")
+        String email,
+        @Size(max = 255) String middleName,
         @Size(max = 20) String phoneNumber,
-        @Size(max = 256) String address
+        @Size(max = 255) String address
 ) {}

@@ -21,13 +21,16 @@ public class Person {
     @Column(name = "last_name", nullable = false, length = 128)
     private String lastName;
 
-    @Column(name = "middle_name", length = 256)
+    @Column(unique = true, nullable = false)
+    private String email;
+
+    @Column(name = "middle_name")
     private String middleName;
 
     @Column(name = "phone_number", length = 20, unique = true)
     private String phoneNumber;
 
-    @Column(length = 256)
+    @Column()
     private String address;
     
     @OneToOne(fetch=FetchType.LAZY, optional=true)
