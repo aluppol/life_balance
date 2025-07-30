@@ -1,24 +1,46 @@
 package com.luppol.life_balance.controllers;
 
 import com.jayway.jsonpath.JsonPath;
+import com.luppol.life_balance.models.Person;
+import com.luppol.life_balance.repositories.PersonRepository;
+import com.luppol.life_balance.security.AuthContext;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MvcResult;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 class MissionControllerIT extends AbstractControllerIT {
+    @Autowired
+    private PersonRepository personRepository;
+
+    @Autowired
+    private AuthContext authContext;
+
+    @BeforeEach
+    void setup() {
+        Long stubPersonId = authContext.personId();
+        personRepository.deleteAll();
+        Person p = new Person();
+        p.setId(stubPersonId);               // manual PK for tests
+        p.setFirstName("Stub");
+        p.setLastName("User");
+        p.setEmail("stub.user@example.com");
+        personRepository.save(p);
+    }
 
     @Test
     void create_successful() throws Exception {
         mvc.perform(post(MissionController.BASE_PATH)
                         .contentType("application/json")
                         .content("""
-                    {"name": "My Mission"}
+                    {"text": "My Mission"}
                 """))
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"))
-                .andExpect(jsonPath("$.name").value("My Mission"))
+                .andExpect(jsonPath("$.text").value("My Mission"))
                 .andExpect(jsonPath("$.id").isNumber());
     }
 
@@ -27,7 +49,7 @@ class MissionControllerIT extends AbstractControllerIT {
         mvc.perform(post(MissionController.BASE_PATH)
                         .contentType("application/json")
                         .content("""
-                    {"name": ""}
+                    {"text": ""}
                 """))
                 .andExpect(status().isBadRequest());
     }
@@ -39,10 +61,10 @@ class MissionControllerIT extends AbstractControllerIT {
         mvc.perform(put(MissionController.BASE_PATH + "/{id}", id)
                         .contentType("application/json")
                         .content("""
-                    {"name": "Updated Mission"}
+                    {"text": "Updated Mission"}
                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Updated Mission"));
+                .andExpect(jsonPath("$.text").value("Updated Mission"));
     }
 
     @Test
@@ -52,10 +74,10 @@ class MissionControllerIT extends AbstractControllerIT {
         mvc.perform(patch(MissionController.BASE_PATH + "/{id}", id)
                         .contentType("application/json")
                         .content("""
-                    {"name": "Patched Mission"}
+                    {"text": "Patched Mission"}
                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Patched Mission"));
+                .andExpect(jsonPath("$.text").value("Patched Mission"));
     }
 
     @Test
@@ -65,7 +87,7 @@ class MissionControllerIT extends AbstractControllerIT {
         mvc.perform(patch(MissionController.BASE_PATH + "/{id}", id)
                         .contentType("application/json")
                         .content("""
-                    {"name": ""}
+                    {"text": ""}
                 """))
                 .andExpect(status().isBadRequest());
     }
@@ -82,10 +104,10 @@ class MissionControllerIT extends AbstractControllerIT {
     }
 
     // Utility method for test readability
-    private long createMission(String name) throws Exception {
+    private long createMission(String text) throws Exception {
         MvcResult result = mvc.perform(post(MissionController.BASE_PATH)
                         .contentType("application/json")
-                        .content("{\"name\": \"%s\"}".formatted(name)))
+                        .content("{\"text\": \"%s\"}".formatted(text)))
                 .andExpect(status().isCreated())
                 .andReturn();
 

@@ -30,7 +30,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 @Tag(name = "Mission", description = "Mission management API")
 public class MissionController {
-    public static final String BASE_PATH = "api/mission";
+    public static final String BASE_PATH = "/api/mission";
 
     private final MissionService missionService;
     private final MissionAssignmentService missionAssignmentService;

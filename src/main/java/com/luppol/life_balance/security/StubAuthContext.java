@@ -8,6 +8,6 @@ import org.springframework.stereotype.Component;
 public class StubAuthContext implements AuthContext {
     @Override
     public Long personId() {
-        return 42L;
+        return 1L;
     }
 }

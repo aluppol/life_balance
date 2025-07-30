@@ -28,6 +28,7 @@ public interface PersonMapper extends BaseMapper {
     default void patchFromDtoToPerson(PersonPatchDto dto, JsonNode jsonBody,  @MappingTarget Person person) {
         patch(jsonBody, "firstName", dto.firstName(), person::setFirstName);
         patch(jsonBody, "lastName", dto.lastName(), person::setLastName);
+        patch(jsonBody, "email", dto.email(), person::setEmail);
         patch(jsonBody, "middleName", dto.middleName(), person::setMiddleName);
         patch(jsonBody, "phoneNumber", dto.phoneNumber(), person::setPhoneNumber);
         patch(jsonBody, "address", dto.address(), person::setAddress);

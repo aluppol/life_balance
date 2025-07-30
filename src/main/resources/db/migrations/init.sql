@@ -51,9 +51,9 @@ CREATE TABLE Person (
     id INTEGER UNSIGNED  PRIMARY KEY AUTO_INCREMENT,
     first_name VARCHAR(128) NOT NULL,
     last_name VARCHAR (128) NOT NULL,
-    middle_name VARCHAR(256),
+    middle_name VARCHAR(255),
     phone_number BIGINT UNSIGNED,
-    address VARCHAR(256)
+    address VARCHAR(255)
 );
 
 CREATE TABLE Enterprise (
@@ -77,14 +77,14 @@ CREATE TABLE Quote (
     id INTEGER UNSIGNED  PRIMARY KEY AUTO_INCREMENT,
     person_id  INTEGER UNSIGNED NOT NULL,
     text VARCHAR (2048)  NOT NULL,
-    author VARCHAR (256),
+    author VARCHAR (255),
     CONSTRAINT fk_quote_person FOREIGN KEY (person_id) REFERENCES Person(id)
 );
 
 CREATE TABLE Note (
     id INTEGER UNSIGNED  PRIMARY KEY AUTO_INCREMENT,
     person_id  INTEGER UNSIGNED NOT NULL,
-    title VARCHAR (256) NOT NULL,
+    title VARCHAR (255) NOT NULL,
     text VARCHAR(2048),
     CONSTRAINT fk_note_person FOREIGN KEY (person_id) REFERENCES Person(id)
 );
