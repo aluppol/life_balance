@@ -1,5 +1,5 @@
 package com.luppol.life_balance.config;
-
+// Draft
 import com.luppol.life_balance.security.GoogleOidcUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
