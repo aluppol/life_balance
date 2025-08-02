@@ -1,7 +1,7 @@
 package com.luppol.life_balance.security;
 
 import com.luppol.life_balance.config.SecurityStubConfig;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -15,7 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
 
-@WebMvcTest
+@WebMvcTest(controllers = SecurityStubMvcTest.TestController.class)
 @Import(SecurityStubConfig.class)
 @ActiveProfiles("stub")
 public class SecurityStubMvcTest {
@@ -23,22 +23,22 @@ public class SecurityStubMvcTest {
     MockMvc mvc;
 
     @RestController
-    static class TestController {
+    public static class TestController {
         @GetMapping("/ping")
-        String ping() {
+        public String ping() {
             return "pong";
         }
     }
 
     @Test
     public void auth_successful() throws Exception {
-        mvc.perform(get("ping").header("X-PERSON-ID", "123"))
+        mvc.perform(get("/ping").header("X-PERSON-ID", "123"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("pong"));
     }
 
     @Test
     public void auth_failed() throws Exception {
-        mvc.perform((get("ping"))).andExpect(status().isUnauthorized());
+        mvc.perform((get("/ping"))).andExpect(status().isUnauthorized());
     }
 }
