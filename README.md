@@ -21,16 +21,30 @@ The application is inspired by the principles outlined in *The 7 Habits of Highl
     ```bash
     cp .env.example .env  
     ```
+2. **Grant permissions for db init script:**
+   ```bash
+   chmod +x db/postgres-init.sh
+   ```
 
-2. **Run the development environment**:
-    ```bash
+3**Run the development environment**:
+   ```bash
     ./dev.sh up         # start app
+   ```
+   ```bash
     ./dev.sh down       # exit app
+   ```
+   ```bash
     ./dev.sh hard-reset # full app restart (all data removed)
+   ```
+   ```bash
     ./dev.sh migrate    # up all migrations
+   ```
+   ```bash
     ./dev.sh rollback   # down 1 last migration
+   ```
+   ```bash
    ./dev.sh test        # unit + integration tests and coverage
-    ```
+   ```
 
    This script will:
     - Load environment variables from `.env`
