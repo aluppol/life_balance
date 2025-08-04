@@ -69,6 +69,7 @@ jobs:
       - name: Run database initialization script
         run: db/postgres-init.sh
         env:
+          PGHOST: localhost
           POSTGRES_USER: ${{ secrets.PG_ROOT_USER }}
           POSTGRES_DB: ${{ secrets.PG_NAME }}
           PG_USER: ${{ secrets.PG_USER }}
