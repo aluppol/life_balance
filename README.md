@@ -60,3 +60,7 @@ The application is inspired by the principles outlined in *The 7 Habits of Highl
    ```bash
    ./create_migration.sh your-change-name
    ```
+
+## API Swagger Access
+
+[http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
