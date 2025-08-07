@@ -58,7 +58,14 @@ The application is inspired by the principles outlined in *The 7 Habits of Highl
    To create a new migration file:
    
    ```bash
-   ./create_migration.sh your-change-name
+   ./db/create_migration.sh your-change-name
+   ```
+
+Rollback last migration (make sure liquibase CLI installed):
+
+
+   ```bash
+   ./dev.sh rollback
    ```
 
 ## API Swagger Access
