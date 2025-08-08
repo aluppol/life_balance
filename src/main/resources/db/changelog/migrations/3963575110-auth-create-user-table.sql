@@ -3,14 +3,14 @@
 
 CREATE TABLE auth."User" (
     id        BIGSERIAL PRIMARY KEY,
-    login     VARCHAR(128) NOT NULL UNIQUE,
-    password  VARCHAR(128) NOT NULL,
+    username     VARCHAR(256) NOT NULL UNIQUE,
+    password  VARCHAR(256) NOT NULL,
     email     VARCHAR(256) NOT NULL UNIQUE
 );
 
-CREATE INDEX user_login ON auth."User" (login);
+CREATE INDEX user_username ON auth."User" (username);
 
 
---rollback DROP INDEX IF EXISTS auth.user_login;
+--rollback DROP INDEX IF EXISTS auth.user_username;
 --rollback DROP TABLE IF EXISTS auth."User";
 

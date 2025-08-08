@@ -1,6 +1,7 @@
-package com.luppol.life_balance.models;
+package com.luppol.life_balance.repositories;
 
-import com.luppol.life_balance.repositories.PersonRepository;
+import com.luppol.life_balance.models.Mission;
+import com.luppol.life_balance.repositories.MissionRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -14,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Testcontainers
 @DataJpaTest
-public class PersonRepositoryIT {
+public class MissionRepositoryIT {
     @Container
     static final PostgreSQLContainer<?> db = new PostgreSQLContainer<>("postgres:16-alpine")
             .withInitScript("db/create-schema.sql");
@@ -27,11 +28,11 @@ public class PersonRepositoryIT {
     }
 
     @Autowired
-    PersonRepository repo;
+    MissionRepository repo;
 
     @Test
     void safeAndFind() {
-        Person saved = repo.save(Person.builder().firstName("Alice").lastName("Smith").build());
+        Mission saved = repo.save(Mission.builder().text("To be happy!").build());
         assertTrue(repo.findById(saved.getId()).isPresent());
     }
 
