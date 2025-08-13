@@ -7,5 +7,6 @@ public interface UserRepository extends BaseRepository<User> {
     default Class<User> getDomainClass() { return User.class; }
 
     boolean existsByUsername(String username);
+    boolean existsByEmail(String username);
 
 }
