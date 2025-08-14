@@ -18,9 +18,11 @@ public interface UserMapper extends BaseMapper {
     User toUser(UserCreateDto dto);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "password", ignore = true)
     void putFromDtoToUser(UserPutDto dto, @MappingTarget User user);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "password", ignore = true)
     default void patchFromDtoToUser(UserPatchDto dto, JsonNode jsonBody,  @MappingTarget User user) {
         patch(jsonBody, "username", dto.username(), user::setUsername);
         patch(jsonBody, "email", dto.email(), user::setEmail);

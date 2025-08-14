@@ -7,7 +7,9 @@ import com.luppol.life_balance.dto.UserPatchDto;
 import com.luppol.life_balance.dto.UserPutDto;
 import com.luppol.life_balance.dto.UserReadDto;
 import com.luppol.life_balance.exceptions.DuplicateUserException;
+import com.luppol.life_balance.exceptions.UserEmailValidationException;
 import com.luppol.life_balance.exceptions.UserNotFoundException;
+import com.luppol.life_balance.exceptions.UserPasswordValidationException;
 import com.luppol.life_balance.mappers.UserMapper;
 import com.luppol.life_balance.models.User;
 import com.luppol.life_balance.repositories.UserRepository;
@@ -42,8 +44,8 @@ public class UserServiceTest {
 
     @Test
     void create_succeeds() {
-        UserCreateDto dto = new UserCreateDto("test_user", "test@test.com", "password!45");
-        User toSave = User.builder().username("test_user").email("test@test.com").build();
+        UserCreateDto dto = new UserCreateDto("test_user", "test@test.com", "passwordA!45");
+        User toSave = User.builder().username("test_user").email("test@test.com").password("passwordA!45").build();
         User saved  = User.builder().id(1L).username("test_user").email("test@test.com").build();
         UserReadDto readDto   = new UserReadDto(1L, "test_user", "test@test.com");
 
@@ -61,8 +63,8 @@ public class UserServiceTest {
 
     @Test
     void create_succeeds_noUsername() {
-        UserCreateDto dto = new UserCreateDto("test@test.com", "password!45");
-        User toSave = User.builder().email("test@test.com").build();
+        UserCreateDto dto = new UserCreateDto("test@test.com", "passwordA!45");
+        User toSave = User.builder().email("test@test.com").password("passwordA!45").build();
         User saved  = User.builder().id(1L).username("test@test.com").email("test@test.com").build();
         UserReadDto readDto   = new UserReadDto(1L, "test@test.com", "test@test.com");
 
@@ -79,27 +81,9 @@ public class UserServiceTest {
     }
 
     @Test
-    void create_throws_noEmailProvided() {
-        UserCreateDto dto = new UserCreateDto("u", null, "Password!45");
-        assertThrows(IllegalArgumentException.class, () -> userService.create(dto));
-    }
-
-    @Test
-    void create_throws_noPasswordProvided() {
-        UserCreateDto dto = new UserCreateDto("u", "e@x.com", null);
-        assertThrows(IllegalArgumentException.class, () -> userService.create(dto));
-    }
-
-
-    @Test
-    void create_throws_emptyDto() {
-        UserCreateDto dto = new UserCreateDto(null, null, null);
-        assertThrows(IllegalArgumentException.class, () -> userService.create(dto));
-    }
-
-    @Test
     void create_throws_emailAlreadyExists() {
         UserCreateDto dto = new UserCreateDto("u", "e@x.com", "Password!45");
+        when(userMapper.toUser(dto)).thenReturn(User.builder().username("u").email("e@x.com").password("Password!45").build());
         when(userRepository.existsByEmail("e@x.com")).thenReturn(true);
         assertThrows(DuplicateUserException.class, () -> userService.create(dto));
         verify(userRepository).existsByEmail("e@x.com");
@@ -107,13 +91,80 @@ public class UserServiceTest {
     }
 
     @Test
+    void create_throws_emailFailingPattern() {
+        UserCreateDto dto = new UserCreateDto("u", "asdfsda", "Password!45");
+        when(userMapper.toUser(dto)).thenReturn(User.builder().email("asdfsda").password("Password!45").build());        assertThrows(UserEmailValidationException.class, () -> userService.create(dto));
+        verify(userRepository, never()).existsByEmail("asdfsda");
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
     void create_throws_usernameAlreadyExists() {
         UserCreateDto dto = new UserCreateDto("u", "e@x.com", "Password!45");
+        when(userMapper.toUser(dto)).thenReturn(User.builder().username("u").email("e@x.com").password("Password!45").build());
         when(userRepository.existsByUsername("u")).thenReturn(true);
         assertThrows(DuplicateUserException.class, () -> userService.create(dto));
         verify(userRepository).existsByUsername("u");
         verify(userRepository, never()).save(any());
     }
+
+    // -------- CREATE (password policy) -----------------------------
+
+    @Test void create_rejects_passwordTooShort() {
+        UserCreateDto dto = new UserCreateDto("u", "e@x.com", "A1!a"); // < 8
+        User user = User.builder().username("u").email("e@x.com").password("A1!a").build();
+        when(userMapper.toUser(dto)).thenReturn(user);
+
+        assertThrows(UserPasswordValidationException.class, () -> userService.create(dto));
+    }
+
+    @Test void create_rejects_passwordTooLong() {
+        UserCreateDto dto = new UserCreateDto("u", "e@x.com", "asdfsadfasfdasfdsafdsafsdafasdfdsafsdafsdafdsafdsafsdafdsagasfgasdfgdsgasdgsdagdsagadsgasgasdgasdgasdgsdagasgA1!a"); // < 8
+        User user = User.builder().username("u").email("e@x.com").password("asdfsadfasfdasfdsafdsafsdafasdfdsafsdafsdafdsafdsafsdafdsagasfgasdfgdsgasdgsdagdsagadsgasgasdgasdgasdgsdagasgA1!a").build();
+        when(userMapper.toUser(dto)).thenReturn(user);
+        assertThrows(UserPasswordValidationException.class, () -> userService.create(dto));
+    }
+
+    @Test void create_rejects_passwordNoDigit() {
+        UserCreateDto dto = new UserCreateDto("u", "e@x.com", "Abcdef!G");
+        User user = User.builder().username("u").email("e@x.com").password("Abcdef!G").build();
+        when(userMapper.toUser(dto)).thenReturn(user);
+
+        assertThrows(UserPasswordValidationException.class, () -> userService.create(dto));
+    }
+
+    @Test void create_rejects_passwordNoSpecial() {
+        UserCreateDto dto = new UserCreateDto("u", "e@x.com", "Abcdef1G");
+        User user = User.builder().username("u").email("e@x.com").password("Abcdef1G").build();
+        when(userMapper.toUser(dto)).thenReturn(user);
+
+        assertThrows(UserPasswordValidationException.class, () -> userService.create(dto));
+    }
+
+    @Test void create_rejects_passwordNoLowercase() {
+        UserCreateDto dto = new UserCreateDto("u", "e@x.com", "PASSWORD1!");
+        User user = User.builder().username("u").email("e@x.com").password("PASSWORD1!").build();
+        when(userMapper.toUser(dto)).thenReturn(user);
+
+        assertThrows(UserPasswordValidationException.class, () -> userService.create(dto));
+    }
+
+    @Test void create_rejects_passwordNoUppercase() {
+        UserCreateDto dto = new UserCreateDto("u", "e@x.com", "password1!");
+        User user = User.builder().username("u").email("e@x.com").password("password1!").build();
+        when(userMapper.toUser(dto)).thenReturn(user);
+
+        assertThrows(UserPasswordValidationException.class, () -> userService.create(dto));
+    }
+
+    @Test void create_rejects_passwordContainsQwerty() {
+        UserCreateDto dto = new UserCreateDto("u", "e@x.com", "AbcQwErTy1!");
+        User user = User.builder().username("u").email("e@x.com").password("AbcQwErTy1!").build();
+        when(userMapper.toUser(dto)).thenReturn(user);
+
+        assertThrows(UserPasswordValidationException.class, () -> userService.create(dto));
+    }
+
 
     @Test
     void getById_notFound_throws() {
@@ -240,39 +291,6 @@ public class UserServiceTest {
         long id = 11L;
         userService.deleteById(id);
         verify(userRepository).deleteById(id);
-    }
-
-
-    // -------- CREATE (password policy) -----------------------------
-
-    @Test void create_rejects_passwordTooShort() {
-        UserCreateDto dto = new UserCreateDto("u", "e@x.com", "A1!a"); // < 8
-        assertThrows(IllegalArgumentException.class, () -> userService.create(dto));
-    }
-
-    @Test void create_rejects_passwordNoDigit() {
-        UserCreateDto dto = new UserCreateDto("u", "e@x.com", "Abcdef!G");
-        assertThrows(IllegalArgumentException.class, () -> userService.create(dto));
-    }
-
-    @Test void create_rejects_passwordNoSpecial() {
-        UserCreateDto dto = new UserCreateDto("u", "e@x.com", "Abcdef1G");
-        assertThrows(IllegalArgumentException.class, () -> userService.create(dto));
-    }
-
-    @Test void create_rejects_passwordNoLowercase() {
-        UserCreateDto dto = new UserCreateDto("u", "e@x.com", "PASSWORD1!");
-        assertThrows(IllegalArgumentException.class, () -> userService.create(dto));
-    }
-
-    @Test void create_rejects_passwordNoUppercase() {
-        UserCreateDto dto = new UserCreateDto("u", "e@x.com", "password1!");
-        assertThrows(IllegalArgumentException.class, () -> userService.create(dto));
-    }
-
-    @Test void create_rejects_passwordContainsQwerty() {
-        UserCreateDto dto = new UserCreateDto("u", "e@x.com", "AbcQwErTy1!");
-        assertThrows(IllegalArgumentException.class, () -> userService.create(dto));
     }
 
     // -------------------- PUT PASSWORD --------------------
