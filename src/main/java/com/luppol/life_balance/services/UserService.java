@@ -13,7 +13,7 @@ import com.luppol.life_balance.mappers.UserMapper;
 import com.luppol.life_balance.models.User;
 import com.luppol.life_balance.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.boot.model.source.internal.hbm.PluralAttributeSourceSetImpl;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +26,7 @@ import java.util.regex.Pattern;
 public class UserService implements IUserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
@@ -40,6 +41,8 @@ public class UserService implements IUserService {
         }
 
         validateUsername(user.getUsername());
+
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
 
         return userMapper.toReadDto(userRepository.save(user));
     }
@@ -76,6 +79,16 @@ public class UserService implements IUserService {
 
     @Override
     public void changePassword(Long id, String oldPass, String newPass) {
+        User user = userRepository.findRequired(id);
+
+
+        if (!passwordEncoder.matches(oldPass, user.getPassword())) {
+            throw new UserPasswordValidationException(List.of("Provided old password is invalid."));
+        }
+
+        validatePassword(newPass);
+        user.setPassword(passwordEncoder.encode(newPass));
+        userRepository.save(user);
     }
 
     private void validateUsername(String username) {

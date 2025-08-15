@@ -61,6 +61,7 @@ dependencies {
 	runtimeOnly 'org.postgresql:postgresql:42.7.3',
 			'io.jsonwebtoken:jjwt-impl:0.12.5',
 			'io.jsonwebtoken:jjwt-jackson:0.12.5'
+			'org.bouncycastle:bcprov-jdk18on:1.81'
 
 }
 

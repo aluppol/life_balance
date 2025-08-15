@@ -6,16 +6,14 @@ import com.luppol.life_balance.dto.UserCreateDto;
 import com.luppol.life_balance.dto.UserPatchDto;
 import com.luppol.life_balance.dto.UserPutDto;
 import com.luppol.life_balance.dto.UserReadDto;
-import com.luppol.life_balance.exceptions.DuplicateUserException;
-import com.luppol.life_balance.exceptions.UserEmailValidationException;
-import com.luppol.life_balance.exceptions.UserNotFoundException;
-import com.luppol.life_balance.exceptions.UserPasswordValidationException;
+import com.luppol.life_balance.exceptions.*;
 import com.luppol.life_balance.mappers.UserMapper;
 import com.luppol.life_balance.models.User;
 import com.luppol.life_balance.repositories.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Answers;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -165,6 +163,64 @@ public class UserServiceTest {
         assertThrows(UserPasswordValidationException.class, () -> userService.create(dto));
     }
 
+    @Test
+    void create_encodesPassword_andPersistsHash() {
+        UserCreateDto dto = new UserCreateDto("u", "e@x.com", "Strong1!");
+        User toSave = User.builder().username("u").email("e@x.com").password("Strong1!").build();
+        User saved  = User.builder().id(1L).username("u").email("e@x.com").password("{argon2id}ENC").build();
+        UserReadDto readDto = new UserReadDto(1L, "u", "e@x.com");
+
+        when(userMapper.toUser(dto)).thenReturn(toSave);
+        when(passwordEncoder.encode("Strong1!")).thenReturn("{argon2id}ENC");
+        when(userRepository.save(any(User.class))).thenReturn(saved);
+        when(userMapper.toReadDto(saved)).thenReturn(readDto);
+
+        UserReadDto result = userService.create(dto);
+        assertEquals(readDto, result);
+
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+        assertEquals("{argon2id}ENC", captor.getValue().getPassword()); // stored hash is encoded
+
+        verify(passwordEncoder).encode("Strong1!");
+    }
+
+    @Test
+    void create_encodesPassword_whenUsernameMissing_usesEmailAsUsername() {
+        UserCreateDto dto = new UserCreateDto("e@x.com", "Strong1!");
+        User toSave = User.builder().email("e@x.com").password("Strong1!").build();
+        User saved  = User.builder().id(2L).username("e@x.com").email("e@x.com").password("{argon2id}ENC").build();
+        UserReadDto readDto = new UserReadDto(2L, "e@x.com", "e@x.com");
+
+        when(userMapper.toUser(dto)).thenReturn(toSave);
+        when(passwordEncoder.encode("Strong1!")).thenReturn("{argon2id}ENC");
+        when(userRepository.save(any(User.class))).thenReturn(saved);
+        when(userMapper.toReadDto(saved)).thenReturn(readDto);
+
+        UserReadDto result = userService.create(dto);
+        assertEquals(readDto, result);
+
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+        User savedArg = captor.getValue();
+        assertEquals("{argon2id}ENC", savedArg.getPassword());
+        assertEquals("e@x.com", savedArg.getUsername()); // username derived from email
+
+        verify(passwordEncoder).encode("Strong1!");
+    }
+
+    @Test
+    void create_invalidPassword_doesNotEncodeOrSave() {
+        UserCreateDto dto = new UserCreateDto("u", "e@x.com", "short1!");
+        User toSave = User.builder().username("u").email("e@x.com").password("short1!").build();
+        when(userMapper.toUser(dto)).thenReturn(toSave);
+
+        assertThrows(UserPasswordValidationException.class, () -> userService.create(dto));
+
+        verify(passwordEncoder, never()).encode(anyString());
+        verify(userRepository, never()).save(any());
+    }
+
 
     @Test
     void getById_notFound_throws() {
@@ -293,7 +349,6 @@ public class UserServiceTest {
         verify(userRepository).deleteById(id);
     }
 
-    // -------------------- PUT PASSWORD --------------------
 
     @Test
     void changePassword_succeeds_encodesAndPersists() {
@@ -302,15 +357,18 @@ public class UserServiceTest {
 
         when(userRepository.findById(ID)).thenReturn(Optional.of(existing));
         when(passwordEncoder.matches("OldP@ss1!", "ENC_OLD")).thenReturn(true);
-        when(passwordEncoder.encode("NewP@ssw0rd")).thenReturn("ENC_NEW");
+        when(passwordEncoder.encode("NewP@ssw0rd")).thenReturn("{argon2id}ENC_NEW");
         when(userRepository.save(existing)).thenReturn(existing);
 
         userService.changePassword(ID, "OldP@ss1!", "NewP@ssw0rd");
 
-        assertEquals("ENC_NEW", existing.getPassword());
+        // verify encoded value was set and persisted
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+        assertEquals("{argon2id}ENC_NEW", captor.getValue().getPassword());
+
         verify(passwordEncoder).matches("OldP@ss1!", "ENC_OLD");
         verify(passwordEncoder).encode("NewP@ssw0rd");
-        verify(userRepository).save(existing);
     }
 
     @Test
@@ -321,9 +379,11 @@ public class UserServiceTest {
         when(userRepository.findById(ID)).thenReturn(Optional.of(existing));
         when(passwordEncoder.matches("wrong", "ENC_OLD")).thenReturn(false);
 
-        assertThrows(org.springframework.security.authentication.BadCredentialsException.class,
+        assertThrows(UserPasswordValidationException.class,
                 () -> userService.changePassword(ID, "wrong", "NewP@ssw0rd"));
 
+        verify(passwordEncoder).matches("wrong", "ENC_OLD");
+        verify(passwordEncoder, never()).encode(anyString());
         verify(userRepository, never()).save(any());
     }
 
@@ -332,20 +392,29 @@ public class UserServiceTest {
         final long ID = 77L;
         when(userRepository.findById(ID)).thenReturn(Optional.empty());
 
-        assertThrows(UserNotFoundException.class,
+        assertThrows(NotFoundException.class,
                 () -> userService.changePassword(ID, "OldP@ss1!", "NewP@ssw0rd"));
 
+        verify(passwordEncoder, never()).matches(anyString(), anyString());
+        verify(passwordEncoder, never()).encode(anyString());
         verify(userRepository, never()).save(any());
     }
 
     @Test
-    void changePassword_rejects_weakPassword() {
+    void changePassword_rejects_weakPassword_doesNotEncodeOrSave() {
         final long ID = 1L;
-        when(userRepository.findById(ID)).thenReturn(Optional.of(new User()));
-        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
+        User existing = User.builder().id(ID).password("ENC_OLD").build();
 
-        assertThrows(IllegalArgumentException.class,
+        when(userRepository.findById(ID)).thenReturn(Optional.of(existing));
+        when(passwordEncoder.matches("OldP@ss1!", "ENC_OLD")).thenReturn(true);
+
+        // weak new password -> should fail validation in service
+        assertThrows(UserPasswordValidationException.class,
                 () -> userService.changePassword(ID, "OldP@ss1!", "short1!"));
+
+        verify(passwordEncoder).matches("OldP@ss1!", "ENC_OLD");
+        verify(passwordEncoder, never()).encode(anyString());
+        verify(userRepository, never()).save(any());
     }
 
 }
