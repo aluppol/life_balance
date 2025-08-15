@@ -5,10 +5,7 @@ import com.luppol.life_balance.dto.UserCreateDto;
 import com.luppol.life_balance.dto.UserPatchDto;
 import com.luppol.life_balance.dto.UserPutDto;
 import com.luppol.life_balance.dto.UserReadDto;
-import com.luppol.life_balance.exceptions.DuplicateUserException;
-import com.luppol.life_balance.exceptions.NotFoundException;
-import com.luppol.life_balance.exceptions.UserEmailValidationException;
-import com.luppol.life_balance.exceptions.UserPasswordValidationException;
+import com.luppol.life_balance.exceptions.*;
 import com.luppol.life_balance.mappers.UserMapper;
 import com.luppol.life_balance.models.User;
 import com.luppol.life_balance.repositories.UserRepository;
@@ -36,11 +33,16 @@ public class UserService implements IUserService {
         validatePassword(user.getPassword());
         validateEmail(user.getEmail());
 
+        if (!isEmailAvailable(user.getEmail())) {
+            throw new DuplicateUserException("User with such email already exists, please use login");
+        }
+
         if (user.getUsername() == null) {
             user.setUsername(user.getEmail());
         }
-
-        validateUsername(user.getUsername());
+        if (!isUsernameAvailable(user.getUsername())) {
+            throw new DuplicateUserException("User with such username already exists, please use login");
+        }
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
@@ -48,33 +50,57 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public UserReadDto getById(Long aLong) throws NotFoundException {
-        return null;
+    public UserReadDto getById(Long id) throws NotFoundException {
+        return userMapper.toReadDto(userRepository.findRequired(id));
     }
 
     @Override
     public List<UserReadDto> getAll() {
-        return List.of();
+        return userRepository.findAll().stream().map(userMapper::toReadDto).toList();
     }
 
     @Override
-    public UserReadDto put(Long aLong, UserPutDto userPutDto) throws NotFoundException {
-        return null;
+    public UserReadDto put(Long id, UserPutDto userPutDto) throws NotFoundException {
+        User user = userRepository.findRequired(id);
+        userMapper.putFromDtoToUser(userPutDto, user);
+
+        validateEmail(user.getEmail());
+        if (!isEmailAvailable(id, user.getEmail())) {
+            throw new UserEmailValidationException("User with such email already exists!");
+        }
+
+        if (!isUsernameAvailable(id, user.getUsername())) {
+            throw new UserUsernamelValidationException("User with such username already exists!");
+        }
+
+        return userMapper.toReadDto(userRepository.save(user));
     }
 
     @Override
-    public UserReadDto patch(Long aLong, UserPatchDto userPatchDto, JsonNode json) throws NotFoundException {
-        return null;
+    public UserReadDto patch(Long id, UserPatchDto userPatchDto, JsonNode json) throws NotFoundException {
+        User user = userRepository.findRequired(id);
+        userMapper.patchFromDtoToUser(userPatchDto, json, user);
+
+        validateEmail(user.getEmail());
+        if (!isEmailAvailable(id, user.getEmail())) {
+            throw new UserEmailValidationException("User with such email already exists!");
+        }
+
+        if (!isUsernameAvailable(id, user.getUsername())) {
+            throw new UserUsernamelValidationException("User with such username already exists!");
+        }
+
+        return userMapper.toReadDto(userRepository.save(user));
     }
 
     @Override
-    public void deleteById(Long aLong) throws NotFoundException {
-
+    public void deleteById(Long id) throws NotFoundException {
+        userRepository.deleteById(id);
     }
 
     @Override
     public long count() {
-        return 0;
+        return userRepository.count();
     }
 
     @Override
@@ -91,10 +117,24 @@ public class UserService implements IUserService {
         userRepository.save(user);
     }
 
-    private void validateUsername(String username) {
-        if (userRepository.existsByUsername(username)) {
-            throw new DuplicateUserException("User with such username already exists, please use login");
-        }
+    private boolean isEmailAvailable(String email) {
+        return !userRepository.existsByEmail(email);
+    }
+
+    private boolean isEmailAvailable(Long id, String email) {
+        return userRepository.findByEmail(email)
+                .map(user -> id.equals(user.getId()))
+                .orElse(true);
+    }
+
+    private boolean isUsernameAvailable(String username) {
+        return !userRepository.existsByUsername(username);
+    }
+
+    private boolean isUsernameAvailable(Long id, String username) {
+        return userRepository.findByUsername(username)
+                .map(user -> id.equals(user.getId()))
+                .orElse(true);
     }
 
     private void validateEmail(String email) {
@@ -103,10 +143,6 @@ public class UserService implements IUserService {
 
         if (!Pattern.matches(EMAIL_REGEX, email)) {
             throw new UserEmailValidationException("Not matches the email pattern");
-        }
-
-        if (userRepository.existsByEmail(email)) {
-            throw new DuplicateUserException("User with such email already exists, please use login");
         }
     }
 

@@ -172,6 +172,8 @@ public class UserServiceTest {
 
         when(userMapper.toUser(dto)).thenReturn(toSave);
         when(passwordEncoder.encode("Strong1!")).thenReturn("{argon2id}ENC");
+        when(userRepository.existsByEmail("e@x.com")).thenReturn(false);
+        when(userRepository.existsByUsername("u")).thenReturn(false);
         when(userRepository.save(any(User.class))).thenReturn(saved);
         when(userMapper.toReadDto(saved)).thenReturn(readDto);
 
@@ -225,7 +227,7 @@ public class UserServiceTest {
     @Test
     void getById_notFound_throws() {
         when(userRepository.findById(42L)).thenReturn(Optional.empty());
-        assertThrows(UserNotFoundException.class, () -> userService.getById(42L));
+        assertThrows(NotFoundException.class, () -> userService.getById(42L));
     }
 
     @Test
@@ -240,7 +242,7 @@ public class UserServiceTest {
     @Test
     void put_notFound() {
         when(userRepository.findById(9L)).thenReturn(Optional.empty());
-        assertThrows(UserNotFoundException.class, () -> userService.put(9L, new UserPutDto("u","e@x.com")));
+        assertThrows(NotFoundException.class, () -> userService.put(9L, new UserPutDto("u","e@x.com")));
     }
 
     @Test
@@ -266,10 +268,20 @@ public class UserServiceTest {
     void put_duplicateEmail_throws() {
         final long ID = 1L;
         User existing = User.builder().id(ID).username("u").email("old@x.com").build();
-        when(userRepository.findById(ID)).thenReturn(Optional.of(existing));
-        when(userRepository.existsByEmail("dup@x.com")).thenReturn(true);
+        UserPutDto dto = new UserPutDto("u", "dup@x.com");
 
-        assertThrows(DuplicateUserException.class, () -> userService.put(ID, new UserPutDto("u","dup@x.com")));
+        when(userRepository.findById(ID)).thenReturn(Optional.of(existing));
+        when(userRepository.findByEmail("dup@x.com")).thenReturn(Optional.of(User.builder().id(2L).build()));
+
+        doAnswer(inv -> {
+            UserPutDto dtoMpr = inv.getArgument(0);
+            User target = inv.getArgument(1);
+            target.setUsername(dtoMpr.username());
+            target.setEmail(dtoMpr.email());
+            return null;
+        }).when(userMapper).putFromDtoToUser(dto, existing);
+
+        assertThrows(UserEmailValidationException.class, () -> userService.put(ID, dto));
         verify(userRepository, never()).save(any());
     }
 
@@ -277,10 +289,21 @@ public class UserServiceTest {
     void put_duplicateUsername_throws() {
         final long ID = 1L;
         User existing = User.builder().id(ID).username("u").email("old@x.com").build();
-        when(userRepository.findById(ID)).thenReturn(Optional.of(existing));
-        when(userRepository.existsByUsername("dup")).thenReturn(true);
+        UserPutDto dto = new UserPutDto("newu", "old@x.com");
 
-        assertThrows(DuplicateUserException.class, () -> userService.put(ID, new UserPutDto("dup","e@x.com")));
+        when(userRepository.findById(ID)).thenReturn(Optional.of(existing));
+        when(userRepository.findByUsername("newu")).thenReturn(Optional.of(User.builder().id(2L).build()));
+        when(userRepository.findByEmail("old@x.com")).thenReturn(Optional.of(existing));
+
+        doAnswer(inv -> {
+            UserPutDto dtoMpr = inv.getArgument(0);
+            User target = inv.getArgument(1);
+            target.setUsername(dtoMpr.username());
+            target.setEmail(dtoMpr.email());
+            return null;
+        }).when(userMapper).putFromDtoToUser(dto, existing);
+
+        assertThrows(UserUsernamelValidationException.class, () -> userService.put(ID, dto));
         verify(userRepository, never()).save(any());
     }
 
@@ -289,7 +312,7 @@ public class UserServiceTest {
         when(userRepository.findById(5L)).thenReturn(Optional.empty());
         JsonNode json = objectMapper.createObjectNode().put("email","x@x.com");
         UserPatchDto dto = new UserPatchDto(null, "x@x.com");
-        assertThrows(UserNotFoundException.class, () -> userService.patch(5L, dto, json));
+        assertThrows(NotFoundException.class, () -> userService.patch(5L, dto, json));
     }
 
     @Test
@@ -304,14 +327,29 @@ public class UserServiceTest {
         UserReadDto read = new UserReadDto(id, "old", "new@x.com");
 
         when(userRepository.findById(id)).thenReturn(Optional.of(existing));
-        when(userRepository.save(any(User.class))).thenReturn(patched);
+        when(userRepository.findByEmail("new@x.com")).thenReturn(Optional.empty());
+        when(userRepository.findByUsername("old")).thenReturn(Optional.of(existing));
+
+
+        doAnswer(inv -> {
+            UserPatchDto dto = inv.getArgument(0);
+            JsonNode j = inv.getArgument(1);
+            User target = inv.getArgument(2);
+            if (dto.username() != null) target.setUsername(dto.username());
+            if (dto.email() != null)    target.setEmail(dto.email());
+            return null;
+        }).when(userMapper).patchFromDtoToUser(patchDto, json, existing);
+
+        when(userRepository.save(existing)).thenReturn(patched);
         when(userMapper.toReadDto(patched)).thenReturn(read);
 
         assertEquals(read, userService.patch(id, patchDto, json));
 
         verify(userMapper).patchFromDtoToUser(patchDto, json, existing);
-        verify(userRepository).save(any(User.class));
+        verify(userRepository).save(existing);
         verify(userMapper).toReadDto(patched);
+        verify(userRepository, never()).existsByEmail(anyString());
+        verify(userRepository, never()).existsByUsername(anyString());
     }
 
     @Test
@@ -319,12 +357,21 @@ public class UserServiceTest {
         long id = 2L;
         User existing = User.builder().id(id).username("u").email("old@x.com").build();
         JsonNode json = objectMapper.createObjectNode().put("email","dup@x.com");
-        UserPatchDto dto = new UserPatchDto(null, "dup@x.com");
+        UserPatchDto patchDto = new UserPatchDto(null, "dup@x.com");
 
         when(userRepository.findById(id)).thenReturn(Optional.of(existing));
-        when(userRepository.existsByEmail("dup@x.com")).thenReturn(true);
+        when(userRepository.findByEmail("dup@x.com")).thenReturn(Optional.of(User.builder().id(4L).build()));
 
-        assertThrows(DuplicateUserException.class, () -> userService.patch(id, dto, json));
+        doAnswer(inv -> {
+            UserPatchDto dto = inv.getArgument(0);
+            JsonNode j = inv.getArgument(1);
+            User target = inv.getArgument(2);
+            if (dto.username() != null) target.setUsername(dto.username());
+            if (dto.email() != null)    target.setEmail(dto.email());
+            return null;
+        }).when(userMapper).patchFromDtoToUser(patchDto, json, existing);
+
+        assertThrows(UserEmailValidationException.class, () -> userService.patch(id, patchDto, json));
         verify(userRepository, never()).save(any());
     }
 
@@ -333,12 +380,21 @@ public class UserServiceTest {
         long id = 2L;
         User existing = User.builder().id(id).username("u").email("old@x.com").build();
         JsonNode json = objectMapper.createObjectNode().put("username","dup");
-        UserPatchDto dto = new UserPatchDto("dup", null);
+        UserPatchDto patchDto = new UserPatchDto("dup", null);
 
         when(userRepository.findById(id)).thenReturn(Optional.of(existing));
-        when(userRepository.existsByUsername("dup")).thenReturn(true);
+        when(userRepository.findByUsername("dup")).thenReturn(Optional.of(User.builder().id(3L).build()));
 
-        assertThrows(DuplicateUserException.class, () -> userService.patch(id, dto, json));
+        doAnswer(inv -> {
+            UserPatchDto dto = inv.getArgument(0);
+            JsonNode j = inv.getArgument(1);
+            User target = inv.getArgument(2);
+            if (dto.username() != null) target.setUsername(dto.username());
+            if (dto.email() != null)    target.setEmail(dto.email());
+            return null;
+        }).when(userMapper).patchFromDtoToUser(patchDto, json, existing);
+
+        assertThrows(UserUsernamelValidationException.class, () -> userService.patch(id, patchDto, json));
         verify(userRepository, never()).save(any());
     }
 
