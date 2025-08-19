@@ -473,4 +473,33 @@ public class UserServiceTest {
         verify(userRepository, never()).save(any());
     }
 
+    @Test
+    void getAll_returnsMappedDtos() {
+        User u1 = User.builder().id(1L).username("u1").email("u1@x.com").build();
+        User u2 = User.builder().id(2L).username("u2").email("u2@x.com").build();
+        UserReadDto d1 = new UserReadDto(1L, "u1", "u1@x.com");
+        UserReadDto d2 = new UserReadDto(2L, "u2", "u2@x.com");
+
+        when(userRepository.findAll()).thenReturn(java.util.List.of(u1, u2));
+        when(userMapper.toReadDto(u1)).thenReturn(d1);
+        when(userMapper.toReadDto(u2)).thenReturn(d2);
+
+        var result = userService.getAll();
+
+        assertEquals(java.util.List.of(d1, d2), result);
+        verify(userRepository).findAll();
+        verify(userMapper).toReadDto(u1);
+        verify(userMapper).toReadDto(u2);
+    }
+
+    @Test
+    void count_delegatesToRepo() {
+        when(userRepository.count()).thenReturn(5L);
+
+        long result = userService.count();
+
+        assertEquals(5L, result);
+        verify(userRepository).count();
+    }
+
 }
