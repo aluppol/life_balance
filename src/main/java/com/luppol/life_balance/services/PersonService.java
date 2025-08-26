@@ -14,7 +14,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class PersonService implements CrudService<Long, PersonCreateDto, PersonReadDto, PersonPutDto, PersonPatchDto> {
+public class PersonService implements IPersonService {
     private final PersonRepository personRepo;
     private final PersonMapper personMapper;
 

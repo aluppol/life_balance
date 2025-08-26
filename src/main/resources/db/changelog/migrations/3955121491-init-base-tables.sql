@@ -8,8 +8,9 @@ CREATE TABLE core."Mission" (
 
 CREATE TABLE core."Person" (
     id SERIAL PRIMARY KEY,
-    first_name VARCHAR(128) NOT NULL,
-    last_name VARCHAR (128) NOT NULL,
+    user_id INTEGER NOT NULL UNIQUE,
+    first_name VARCHAR(128),
+    last_name VARCHAR (128),
     middle_name VARCHAR(256),
     phone_number VARCHAR(20) UNIQUE,
     address VARCHAR(256),

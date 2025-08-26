@@ -1,6 +1,9 @@
 package com.luppol.life_balance.repositories;
 
 import com.luppol.life_balance.models.Person;
+import com.luppol.life_balance.models.User;
+
+import java.util.Optional;
 
 public interface PersonRepository extends BaseRepository<Person> {
     @Override
@@ -8,4 +11,7 @@ public interface PersonRepository extends BaseRepository<Person> {
 
     boolean existsByFirstNameAndLastName(String firstName, String lastName);
     boolean existsByPhoneNumber(String phoneNumber);
+
+    Optional<User> findByUserId(Long userId);
+
 }

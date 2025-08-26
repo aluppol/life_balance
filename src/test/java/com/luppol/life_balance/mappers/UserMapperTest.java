@@ -2,18 +2,16 @@ package com.luppol.life_balance.mappers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.luppol.life_balance.dto.UserCreateDto;
-import com.luppol.life_balance.dto.UserPatchDto;
-import com.luppol.life_balance.dto.UserPutDto;
-import com.luppol.life_balance.dto.UserReadDto;
-import com.luppol.life_balance.models.Mission;
+import com.luppol.life_balance.auth.service.UserService;
+import com.luppol.life_balance.auth.dto.UserCreateDto;
+import com.luppol.life_balance.auth.dto.UserPatchDto;
+import com.luppol.life_balance.auth.dto.UserPutDto;
+import com.luppol.life_balance.auth.dto.UserReadDto;
 import com.luppol.life_balance.models.User;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.lang.reflect.Method;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -23,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 public class UserMapperTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    UserMapper mapper = Mappers.getMapper(UserMapper.class);
+    UserService.UserMapper mapper = Mappers.getMapper(UserService.UserMapper.class);
 
     @Test
     void toReadDto_mapsAllFields() throws Exception {

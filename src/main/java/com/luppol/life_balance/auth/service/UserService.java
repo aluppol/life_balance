@@ -1,15 +1,18 @@
-package com.luppol.life_balance.services;
+package com.luppol.life_balance.auth.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.luppol.life_balance.dto.UserCreateDto;
-import com.luppol.life_balance.dto.UserPatchDto;
-import com.luppol.life_balance.dto.UserPutDto;
-import com.luppol.life_balance.dto.UserReadDto;
+import com.luppol.life_balance.auth.dto.UserCreateDto;
+import com.luppol.life_balance.auth.dto.UserPatchDto;
+import com.luppol.life_balance.auth.dto.UserPutDto;
+import com.luppol.life_balance.auth.dto.UserReadDto;
 import com.luppol.life_balance.exceptions.*;
-import com.luppol.life_balance.mappers.UserMapper;
+import com.luppol.life_balance.mappers.BaseMapper;
 import com.luppol.life_balance.models.User;
 import com.luppol.life_balance.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -197,5 +200,24 @@ public class UserService implements IUserService {
     private String validatePasswordNoQwerty(String pass) {
         String lower = pass.toLowerCase(java.util.Locale.ROOT);
         return lower.contains("qwerty") ? "Must not contain the insecure sequence 'qwerty'" : "";
+    }
+
+    @Mapper(componentModel="spring")
+    public static interface UserMapper extends BaseMapper {
+        UserReadDto toReadDto(User user);
+
+        @Mapping(target = "id", ignore = true)
+        User toUser(UserCreateDto dto);
+
+        @Mapping(target = "id", ignore = true)
+        @Mapping(target = "password", ignore = true)
+        void putFromDtoToUser(UserPutDto dto, @MappingTarget User user);
+
+        @Mapping(target = "id", ignore = true)
+        @Mapping(target = "password", ignore = true)
+        default void patchFromDtoToUser(UserPatchDto dto, JsonNode jsonBody,  @MappingTarget User user) {
+            patch(jsonBody, "username", dto.username(), user::setUsername);
+            patch(jsonBody, "email", dto.email(), user::setEmail);
+        }
     }
 }

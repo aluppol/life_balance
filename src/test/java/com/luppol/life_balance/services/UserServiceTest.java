@@ -2,12 +2,12 @@ package com.luppol.life_balance.services;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.luppol.life_balance.dto.UserCreateDto;
-import com.luppol.life_balance.dto.UserPatchDto;
-import com.luppol.life_balance.dto.UserPutDto;
-import com.luppol.life_balance.dto.UserReadDto;
+import com.luppol.life_balance.auth.service.UserService;
+import com.luppol.life_balance.auth.dto.UserCreateDto;
+import com.luppol.life_balance.auth.dto.UserPatchDto;
+import com.luppol.life_balance.auth.dto.UserPutDto;
+import com.luppol.life_balance.auth.dto.UserReadDto;
 import com.luppol.life_balance.exceptions.*;
-import com.luppol.life_balance.mappers.UserMapper;
 import com.luppol.life_balance.models.User;
 import com.luppol.life_balance.repositories.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -32,7 +32,7 @@ public class UserServiceTest {
     UserRepository userRepository;
 
     @Mock
-    UserMapper userMapper;
+    UserService.UserMapper userMapper;
 
     @Mock
     PasswordEncoder passwordEncoder;
