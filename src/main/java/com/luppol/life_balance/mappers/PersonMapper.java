@@ -16,14 +16,17 @@ public interface PersonMapper extends BaseMapper {
     PersonReadDto toReadDto(Person person);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "userId", ignore = true)
     @Mapping(target = "mission", ignore = true)
     Person toPerson(PersonCreateDto dto);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "userId", ignore = true)
     @Mapping(target = "mission", ignore = true)
     void putFromDtoToPerson(PersonPutDto dto, @MappingTarget Person person);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "userId", ignore = true)
     @Mapping(target = "mission", ignore = true)
     default void patchFromDtoToPerson(PersonPatchDto dto, JsonNode jsonBody,  @MappingTarget Person person) {
         patch(jsonBody, "firstName", dto.firstName(), person::setFirstName);

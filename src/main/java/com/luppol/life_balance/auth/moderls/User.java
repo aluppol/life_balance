@@ -1,4 +1,4 @@
-package com.luppol.life_balance.models;
+package com.luppol.life_balance.auth.moderls;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GenerationType;
@@ -26,9 +26,9 @@ public class User {
     @Column(name = "username", length = 256,  nullable = false, unique = true)
     private String username;
 
-    @Column(name = "password", length = 256, nullable = false)
+    @Column(name = "password", length = 256, nullable = false, updatable = false)
     private String password;
 
-    @Column(name = "email", length = 256, nullable = false, unique = true)
+    @Column(name = "email", length = 256, nullable = false, unique = true, updatable = false)
     private String email;
 }

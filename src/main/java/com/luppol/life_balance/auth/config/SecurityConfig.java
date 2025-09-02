@@ -1,6 +1,5 @@
 package com.luppol.life_balance.auth.config;
 
-
 import com.luppol.life_balance.auth.CurrentUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -11,20 +10,27 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+
+import java.util.Collection;
+
 
 @Configuration
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
     @Bean
-    SecurityFilterChain api(HttpSecurity http, Converter<Jwt, ? extends AbstractAuthenticationToken> conv) throws Exception {
+    SecurityFilterChain api(HttpSecurity http) throws Exception {
+        JwtGrantedAuthoritiesConverter authorities = new JwtGrantedAuthoritiesConverter();
+        Converter<Jwt, AbstractAuthenticationToken> jwtAuthConverter = new JwtToCurrentUserConverter(authorities);
+
         http
-                .csrf(CsrfConfigurer::disable)
+                .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
@@ -33,21 +39,25 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/password-reset/**").permitAll()
                         .anyRequest().authenticated()
                 )
-                .oauth2ResourceServer(o -> o.jwt(j -> j.jwtAuthenticationConverter(conv)));
+                .oauth2ResourceServer(o -> o.jwt(j -> j.jwtAuthenticationConverter(jwtAuthConverter)));
 
         return http.build();
     }
 
-    @Bean
-    Converter<Jwt, ? extends AbstractAuthenticationToken> currentUserConverter () {
-        JwtGrantedAuthoritiesConverter gac = new JwtGrantedAuthoritiesConverter();
+    static final class JwtToCurrentUserConverter implements Converter<Jwt, AbstractAuthenticationToken> {
+        private final JwtGrantedAuthoritiesConverter authorities;
 
-        return jwt -> {
-            Long uid = jwt.getClaim("uid");
-            String uname = jwt.getClaim("uname");
-            Long pid = jwt.getClaim("pid");
-            CurrentUser principal = new CurrentUser(uid, uname, pid);
-            return new UsernamePasswordAuthenticationToken(principal, null, gac.convert(jwt));
-        };
+        JwtToCurrentUserConverter(JwtGrantedAuthoritiesConverter authorities) {
+            this.authorities = authorities;
+        }
+
+        @Override
+        public AbstractAuthenticationToken convert(Jwt jwt) {
+            Number uidClaim = jwt.getClaim("uid");
+            Long uid = (uidClaim == null) ? null : uidClaim.longValue();
+            CurrentUser principal = new CurrentUser(uid);
+            Collection<? extends GrantedAuthority> grants = authorities.convert(jwt);
+            return new UsernamePasswordAuthenticationToken(principal, jwt, grants);
+        }
     }
 }
