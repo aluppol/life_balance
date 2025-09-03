@@ -1,6 +1,5 @@
 package com.luppol.life_balance.auth.config;
 
-import com.luppol.life_balance.auth.CurrentUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -1,4 +1,4 @@
-package com.luppol.life_balance.auth;
+package com.luppol.life_balance.auth.config;
 
 import java.security.Principal;
 

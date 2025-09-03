@@ -1,4 +1,4 @@
-package com.luppol.life_balance.auth.moderls;
+package com.luppol.life_balance.auth.models;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GenerationType;

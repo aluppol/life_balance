@@ -4,8 +4,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-public record UserPutDto(
-        @NotBlank @Size(max = 256) String username,
+public record AuthEmailChangeDto(
         @NotBlank @Size(max = 256) @Email String email,
-        @NotBlank @Size(max = 256) String password
-) {}
+        @NotBlank @Size(min = 8, max = 256) String password
+) { }

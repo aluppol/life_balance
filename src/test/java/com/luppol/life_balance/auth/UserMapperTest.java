@@ -1,11 +1,8 @@
 package com.luppol.life_balance.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.luppol.life_balance.auth.dto.UserCreateDto;
-import com.luppol.life_balance.auth.dto.UserPutDto;
-import com.luppol.life_balance.auth.dto.UserReadDto;
 import com.luppol.life_balance.auth.mappers.UserMapper;
-import com.luppol.life_balance.auth.moderls.User;
+import com.luppol.life_balance.auth.models.User;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 

@@ -1,6 +1,6 @@
-package com.luppol.life_balance.auth;
+package com.luppol.life_balance.auth.services;
 
-import com.luppol.life_balance.auth.moderls.User;
+import com.luppol.life_balance.auth.models.User;
 import com.luppol.life_balance.exceptions.NotFoundException;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

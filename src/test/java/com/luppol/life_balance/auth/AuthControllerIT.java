@@ -1,6 +1,7 @@
 package com.luppol.life_balance.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.luppol.life_balance.auth.services.AuthController;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

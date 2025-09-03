@@ -2,12 +2,9 @@ package com.luppol.life_balance.auth;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.luppol.life_balance.auth.dto.UserCreateDto;
-import com.luppol.life_balance.auth.dto.UserPatchDto;
-import com.luppol.life_balance.auth.dto.UserPutDto;
-import com.luppol.life_balance.auth.dto.UserReadDto;
 import com.luppol.life_balance.auth.mappers.UserMapper;
-import com.luppol.life_balance.auth.moderls.User;
+import com.luppol.life_balance.auth.models.User;
+import com.luppol.life_balance.auth.services.UserRepository;
 import com.luppol.life_balance.exceptions.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,7 +22,8 @@ import static org.mockito.Mockito.*;
 class UserServiceTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Mock(answer = Answers.CALLS_REAL_METHODS) UserRepository userRepository;
+    @Mock(answer = Answers.CALLS_REAL_METHODS)
+    UserRepository userRepository;
 
     @Mock UserMapper userMapper;
 

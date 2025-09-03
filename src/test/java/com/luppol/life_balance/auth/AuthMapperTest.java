@@ -1,7 +1,6 @@
 package com.luppol.life_balance.auth;
 
 import com.luppol.life_balance.auth.dto.AuthRegisterDto;
-import com.luppol.life_balance.auth.dto.UserCreateDto;
 import com.luppol.life_balance.auth.mappers.AuthMapper;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;

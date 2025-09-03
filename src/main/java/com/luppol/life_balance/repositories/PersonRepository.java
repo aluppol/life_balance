@@ -1,7 +1,7 @@
 package com.luppol.life_balance.repositories;
 
 import com.luppol.life_balance.models.Person;
-import com.luppol.life_balance.auth.moderls.User;
+import com.luppol.life_balance.auth.models.User;
 
 import java.util.Optional;
 

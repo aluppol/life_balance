@@ -1,6 +1,7 @@
 package com.luppol.life_balance.auth;
 
-import com.luppol.life_balance.auth.moderls.User;
+import com.luppol.life_balance.auth.models.User;
+import com.luppol.life_balance.auth.services.UserRepository;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

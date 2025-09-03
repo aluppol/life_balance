@@ -1,8 +1,7 @@
-package com.luppol.life_balance.auth;
+package com.luppol.life_balance.auth.services;
 
+import com.luppol.life_balance.auth.config.CurrentUser;
 import com.luppol.life_balance.auth.dto.*;
-import com.luppol.life_balance.auth.service.IAuthService;
-import com.luppol.life_balance.auth.service.IUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -10,6 +9,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,8 +25,6 @@ public class AuthController {
     public static final String BASE_PATH = "/api/auth";
 
     private final IAuthService authService;
-    private final IUserService userService;
-
 
     @Operation(
             summary = "Register new user",
@@ -43,7 +41,7 @@ public class AuthController {
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Registration payload",
                     required = true,
-                    content = @Content(schema = @Schema(implementation = UserCreateDto.class))
+                    content = @Content(schema = @Schema(implementation = AuthRegisterDto.class))
             )
             @Valid @RequestBody AuthRegisterDto body
     ) {
@@ -70,20 +68,6 @@ public class AuthController {
     }
 
     @Operation(
-            summary = "Current user",
-            description = "Returns the profile of the authenticated user."
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Current user",
-                    content = @Content(schema = @Schema(implementation = UserReadDto.class))),
-            @ApiResponse(responseCode = "401", description = "Unauthorized")
-    })
-    @GetMapping("/me")
-    public ResponseEntity<UserReadDto> me(@AuthenticationPrincipal CurrentUser currentUser) {
-        return ResponseEntity.ok(userService.getById(currentUser.uid()));
-    }
-
-    @Operation(
             summary = "Change password",
             description = "Changes password for the authenticated user (requires current password)."
     )
@@ -104,6 +88,44 @@ public class AuthController {
             @AuthenticationPrincipal CurrentUser currentUser
     ) {
         authService.changePassword(currentUser.uid(), body);
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(
+            summary = "Change email",
+            description = "Changes email for the authenticated user (requires current password)."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Email changed"),
+            @ApiResponse(responseCode = "400", description = "Weak password / invalid input"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Current password incorrect")
+    })
+    @PutMapping("/email")
+    public ResponseEntity<Void> changeEmail(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Email change payload",
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = AuthEmailChangeDto.class))
+            )
+            @Valid @RequestBody AuthEmailChangeDto body,
+            @AuthenticationPrincipal CurrentUser currentUser
+    ) {
+        authService.changeEmail(currentUser.uid(), body);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/username")
+    public ResponseEntity<Void> changeUsername(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "New username",
+                    required = true,
+                    content = @Content(schema = @Schema(type = "string"))
+            )
+            @NotBlank @RequestBody String username,
+            @AuthenticationPrincipal CurrentUser currentUser
+    ) {
+        authService.changeUsername(currentUser.uid(), username);
         return ResponseEntity.ok().build();
     }
 }

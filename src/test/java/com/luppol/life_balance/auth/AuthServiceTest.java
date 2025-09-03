@@ -1,9 +1,8 @@
 package com.luppol.life_balance.auth;
 
 import com.luppol.life_balance.auth.dto.AuthRegisterDto;
-import com.luppol.life_balance.auth.dto.UserCreateDto;
 import com.luppol.life_balance.auth.mappers.AuthMapper;
-import com.luppol.life_balance.auth.service.IUserService;
+import com.luppol.life_balance.auth.services.AuthService;
 import com.luppol.life_balance.exceptions.DuplicateUserException;
 import com.luppol.life_balance.exceptions.UserEmailValidationException;
 import com.luppol.life_balance.exceptions.UserPasswordValidationException;
@@ -20,10 +19,12 @@ import static org.mockito.Mockito.*;
 class AuthServiceTest {
 
     @Mock IUserService userService;
-    @Mock AuthMapper authMapper;
+    @Mock
+    AuthMapper authMapper;
     @Mock PasswordEncoder passwordEncoder;
 
-    @InjectMocks AuthService authService;
+    @InjectMocks
+    AuthService authService;
 
     @Test
     void register_valid_withExplicitUsername_normalizes_encodes_and_callsCreate() {
