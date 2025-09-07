@@ -1,3 +1,4 @@
+server.port: ${LB_PORT}
 spring:
   datasource:
     url: jdbc:postgresql://${PG_HOST}:${PG_PORT}/${PG_NAME}
@@ -22,5 +23,10 @@ spring:
     default-schema: core             # apply changesets to core
     liquibase-schema: public         # store metadata in public
 
-  jwt:
-    secret: ${JWT_SECRET}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${AUTH_ISSUER}
+app:
+  security.expected-audience: lifebalance

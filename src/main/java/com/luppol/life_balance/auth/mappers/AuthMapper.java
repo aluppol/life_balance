@@ -12,7 +12,7 @@ import java.util.Locale;
         builder = @Builder(disableBuilder = true)
 )
 public interface AuthMapper {
-
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "email",    expression = "java(normalize(body.email()))")
     @Mapping(target = "username", expression = "java(normalize(deriveUsername(body.username(), body.email())))")
     @Mapping(target = "password", source = "passwordHash")

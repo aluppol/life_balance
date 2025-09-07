@@ -1,0 +1,10 @@
+FROM quay.io/keycloak/keycloak:26.0.2
+
+# Bake DB vendor into the build (this is the build-time option)
+ENV KC_DB=postgres
+
+# Run build step once in the image
+RUN /opt/keycloak/bin/kc.sh build
+
+# Runtime entrypoint: only start, optimized
+ENTRYPOINT ["/opt/keycloak/bin/kc.sh", "start", "--optimized", "--http-enabled=true"]

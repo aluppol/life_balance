@@ -7,8 +7,10 @@ services:
       POSTGRES_DB: ${PG_NAME}
       POSTGRES_USER: ${PG_ROOT_USER}
       POSTGRES_PASSWORD: ${PG_ROOT_PASS}
-      PG_USER: ${PG_USER}
-      PG_PASS: ${PG_PASS}
+      PG_LB_USER: ${PG_LB_USER}
+      PG_LB_PASS: ${PG_LB_PASS}
+      PG_AUTH_USER: ${PG_AUTH_USER}
+      PG_AUTH_PASS: ${PG_AUTH_PASS}
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./db/postgres-init.sh:/docker-entrypoint-initdb.d/init.sh
@@ -16,20 +18,24 @@ services:
       - life_balance
 
   auth:
-    image: quay.io/keycloak/keycloak:26.0.2
-    command: start --optimized --http-enabled=true
+    build:
+      context: .
+      dockerfile: Dockerfile.auth
     depends_on: [ postgres ]
     environment:
-      KEYCLOAK_ADMIN: ${KC_ADMIN}
-      KEYCLOAK_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD}
+      KEYCLOAK_ADMIN: ${AUTH_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${AUTH_ADMIN_PASSWORD}
       KC_DB: postgres
-      KC_DB_URL: "jdbc:postgresql://${PG_HOST}:${PG_PORT}/${PG_NAME}"
-      KC_DB_USERNAME: ${PG_USER}
-      KC_DB_PASSWORD: ${PG_PASS}
+      KC_DB_URL: "jdbc:postgresql://postgres:${PG_PORT}/${PG_NAME}"
+      KC_DB_USERNAME: ${PG_AUTH_USER}
+      KC_DB_PASSWORD: ${PG_AUTH_PASS}
       KC_DB_SCHEMA: auth
-      KC_HTTP_PORT: ${KC_PORT}
+      KC_HTTP_PORT: ${AUTH_PORT}
+      KC_HOSTNAME: "http://${PG_HOST}:${AUTH_PORT}"
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
     ports:
-      - "${KC_PORT}:${KC_PORT}"
+      - "${AUTH_PORT}:8080"
     networks:
       - life_balance
 volumes:

@@ -12,10 +12,16 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 
 
@@ -23,6 +29,9 @@ import java.util.Collection;
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+    @Bean
+    PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(12); }
+
     @Bean
     SecurityFilterChain api(HttpSecurity http) throws Exception {
         JwtGrantedAuthoritiesConverter authorities = new JwtGrantedAuthoritiesConverter();
@@ -58,5 +67,13 @@ public class SecurityConfig {
             Collection<? extends GrantedAuthority> grants = authorities.convert(jwt);
             return new UsernamePasswordAuthenticationToken(principal, jwt, grants);
         }
+    }
+
+    @Bean
+    public JwtDecoder jwtDecoder() {
+        String secret = "replace-with-256-bit-secret-key";
+        return NimbusJwtDecoder.withSecretKey(
+                new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256")
+        ).build();
     }
 }
