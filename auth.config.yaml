@@ -1,0 +1,28 @@
+realm: $(env:AUTH_REALM)
+enabled: true
+registrationAllowed: false
+loginWithEmailAllowed: true
+sslRequired: NONE   # dev; for prod put EXTERNAL and terminate TLS
+
+roles:
+  realm:
+    - name: USER
+    - name: ADMIN
+
+clients:
+  - clientId: $(env:LB_CLIENT_ID)
+    name: Life Balance
+    protocol: openid-connect
+    publicClient: false
+    clientAuthenticatorType: client-secret
+    secret: $(env:LB_CLIENT_SECRET)
+    standardFlowEnabled: true          # Authorization Code (+PKCE by client)
+    directAccessGrantsEnabled: false   # disable ROPC
+    serviceAccountsEnabled: false
+    redirectUris:
+      - $(env:LB_REDIRECT_1)
+      - $(env:LB_REDIRECT_2)
+    webOrigins: ["+"]
+    attributes:
+      pkce.code.challenge.method: S256
+      access.token.lifespan: "900"

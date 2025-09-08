@@ -4,49 +4,58 @@ set -e
 ACTION=$1
 
 if [ -z "$ACTION" ]; then
-  echo "Usage: $0 [up|down|hard-reset|migrate|rollback]"
+  echo "Usage: $0 [up|down|hard-reset|migrate|rollback|auth-reconcile|auth-backup|auth-restore]"
   exit 1
 fi
 
 load_env() {
   echo "Loading environment variables from .env..."
   export $(grep -v '^#' .env | xargs)
+
+  if [ -z "${AUTH_BASE_URL:-}" ]; then
+    export AUTH_BASE_URL="http://localhost:${AUTH_PORT:-8080}"
+  fi
 }
 
 auth_backup_schema() {
-  local schema="${AUTH_DB_SCHEMA:-kc}"
+  local schema="${KC_DB_SCHEMA:-auth}"
   local ts
   ts="$(date +%Y%m%d_%H%M%S)"
   mkdir -p backups
-  echo "Backing up Auth schema '${schema}' from DB '${PG_NAME}'..."
+
+  echo "Backing up Keycloak schema '${schema}' from DB '${PG_NAME}'..."
   set +e
-  docker exec -e PGPASSWORD="${PG_ROOT_PASS}" postgres \
-    pg_dump -U "${PG_ROOT_USER}" -d "${PG_NAME}" -n "${schema}" -Fc -f "/tmp/kc_${ts}.dump"
+  docker compose exec -T -e PGPASSWORD="${PG_ROOT_PASS}" postgres \
+    pg_dump -U "${PG_ROOT_USER}" -d "${PG_NAME}" -n "${schema}" -Fc -f "/tmp/auth_${ts}.dump"
   local rc=$?
   set -e
+
   if [ $rc -ne 0 ]; then
-    echo "WARN: Auth schema backup failed or schema missing (continuing with reset)."
+    echo "WARN: Backup failed or schema '${schema}' missing (continuing)."
     return 0
   fi
-  docker cp postgres:/tmp/kc_${ts}.dump "backups/kc_${ts}.dump"
-  echo "Backup created: backups/kc_${ts}.dump"
+  docker compose cp postgres:/tmp/auth_${ts}.dump "backups/auth_${ts}.dump"
+  echo "✔ Backup created: backups/auth_${ts}.dump"
 }
 
-kc_restore_schema() {
+auth_restore_schema() {
+  local schema="${KC_DB_SCHEMA:-auth}"
   local latest
-  latest="$(ls -1 backups/kc_*.dump 2>/dev/null | tail -n1 || true)"
+  latest="$(ls -1 backups/auth_*.dump 2>/dev/null | tail -n1 || true)"
   if [ -z "$latest" ]; then
     echo "No Keycloak backup found; starting clean."
     return 0
   fi
-  echo "Restoring Keycloak schema from ${latest} ..."
-  docker cp "${latest}" postgres:/tmp/kc_restore.dump
-  docker exec -e PGPASSWORD="${PG_ROOT_PASS}" postgres bash -lc \
-    "pg_restore -U '${PG_ROOT_USER}' -d '${PG_NAME}' --clean --if-exists -n '${AUTH_DB_SCHEMA:-kc}' /tmp/kc_restore.dump"
-  echo "Keycloak schema restored."
-  # Restart keycloak to ensure it re-reads schema cleanly
+
+  echo "Restoring Keycloak schema '${schema}' from ${latest} ..."
+  docker compose cp "${latest}" postgres:/tmp/auth_restore.dump
+  docker compose exec -T -e PGPASSWORD="${PG_ROOT_PASS}" postgres bash -lc \
+    "pg_restore -U '${PG_ROOT_USER}' -d '${PG_NAME}' --clean --if-exists -n '${schema}' /tmp/auth_restore.dump"
+  echo "✔ Keycloak schema restored."
+
+  # Restart KC to ensure it re-reads schema cleanly (ignore if service name differs)
   set +e
-  docker compose restart keycloak >/dev/null 2>&1
+  docker compose restart auth >/dev/null 2>&1 || true
   set -e
 }
 
@@ -59,6 +68,13 @@ wait_for_http() {
   return 1
 }
 
+auth_apply_config() {
+  echo "Applying Auth config-as-code (keycloak-config-cli)..."
+  # Run the reconciler once and remove the container after it exits
+  docker compose run --rm auth-config-cli
+  echo "✔ Auth config applied."
+}
+
 case "$ACTION" in
   up)
     load_env
@@ -69,14 +85,18 @@ case "$ACTION" in
     echo "Building images..."
     docker compose build
 
-    echo "Starting PostgreSQL via Docker Compose..."
-    docker compose up -d
+    echo "Starting DB (wait for health)..."
+    docker compose up -d --wait postgres
+
+    echo "Starting Auth (gated on DB health)..."
+    docker compose up -d --wait auth
 
     echo "Auth Admin:  http://localhost:${AUTH_PORT:-8080}"
-    echo "Auth Issuer:       http://localhost:${AUTH_PORT:-8080}/realms/${AUTH_REALM:-luppol}"
+    echo "Auth Issuer: http://localhost:${AUTH_PORT:-8080}/realms/${AUTH_REALM:-luppol}"
     wait_for_http "http://localhost:${AUTH_PORT:-8080}/realms/${AUTH_REALM:-luppol}/.well-known/openid-configuration" || true
 
-    echo "Swagger UI: http://localhost:${APP_PORT}}}/swagger-ui.html"
+    auth_apply_config
+
     echo "Starting Spring Boot app with Gradle..."
     ./gradlew bootRun
     ;;
@@ -93,18 +113,19 @@ case "$ACTION" in
   hard-reset)
     load_env
 
-    echo "Preparing backup of Auth schema (if present) before reset..."
-    auth_backup_schema
-
-    echo "Stopping and removing containers and volumes..."
+    echo "Stopping and removing containers/volumes..."
     docker compose down -v --remove-orphans
 
-    echo "Rebuilding containers from scratch..."
+    echo "Rebuilding from scratch..."
     docker compose build --no-cache
-    docker compose up -d
 
-    echo "Attempting to restore Auth schema (if a backup exists)..."
-    kc_restore_schema
+    echo "Starting DB and Auth..."
+    docker compose up -d --wait postgres
+    docker compose up -d --wait auth
+
+    # No automatic restore here (clean reset). If you want to restore, run: ./dev.sh auth-restore
+    echo "Reapplying Auth config..."
+    auth_apply_config
 
     echo "Starting Spring Boot app with Gradle..."
     ./gradlew bootRun
@@ -124,6 +145,27 @@ case "$ACTION" in
     ./gradlew rollbackCount -PliquibaseCommandValue=1
     ;;
 
+   auth-reconcile)
+      load_env
+      # Ensure services are up; rely on reconciler's availability check afterward
+      docker compose up -d --wait postgres auth
+      auth_apply_config
+      ;;
+
+    auth-backup)
+      load_env
+      docker compose up -d --wait postgres
+      auth_backup_schema
+      ;;
+
+    auth-restore)
+      load_env
+      docker compose up -d --wait postgres auth
+      auth_restore_schema
+      # After restore, reconcile to ensure config drift is fixed
+      auth_apply_config
+      ;;
+
   test)
     echo "Running unit & integration tests with coverage…"
     ./gradlew clean test jacocoTestReport
@@ -133,7 +175,7 @@ case "$ACTION" in
 
   *)
     echo "Invalid option: $ACTION"
-    echo "Usage: $0 [up|down|hard-reset|migrate|rollback]"
+    echo "Usage: $0 [up|down|hard-reset|migrate|rollback|auth-reconcile|auth-backup|auth-restore|test]"
     exit 1
     ;;
 esac
