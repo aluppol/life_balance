@@ -1,13 +1,26 @@
 realm: $(env:AUTH_REALM)
 enabled: true
-registrationAllowed: false
+sslRequired: NONE
+registrationAllowed: true
 loginWithEmailAllowed: true
-sslRequired: NONE   # dev; for prod put EXTERNAL and terminate TLS
+verifyEmail: true
+
+smtpServer:
+  host: $(env:SMTP_HOST)
+  port: '$(env:SMTP_PORT)'
+  auth: 'true'
+  user: $(env:SMTP_USER)
+  password: $(env:SMTP_PASS)
+  from: $(env:SMTP_FROM)
+  fromDisplayName: $(env:SMTP_FROM_NAME)
+  replyTo: $(env:SMTP_REPLY_TO)
+  replyToDisplayName: $(env:SMTP_REPLY_TO_NAME)
+  starttls: 'true'
+  ssl: 'false'
+  allowutf8: 'false'
 
 roles:
-  realm:
-    - name: USER
-    - name: ADMIN
+  realm: [{ name: USER }, { name: ADMIN }]
 
 clients:
   - clientId: $(env:LB_CLIENT_ID)
@@ -16,13 +29,12 @@ clients:
     publicClient: false
     clientAuthenticatorType: client-secret
     secret: $(env:LB_CLIENT_SECRET)
-    standardFlowEnabled: true          # Authorization Code (+PKCE by client)
-    directAccessGrantsEnabled: false   # disable ROPC
+    standardFlowEnabled: true
+    directAccessGrantsEnabled: false
     serviceAccountsEnabled: false
-    redirectUris:
-      - $(env:LB_REDIRECT_1)
-      - $(env:LB_REDIRECT_2)
-    webOrigins: ["+"]
+    redirectUris: [$(env:LB_REDIRECT_1), $(env:LB_REDIRECT_2)]
+    defaultClientScopes: [ profile, email, roles ]
+
     attributes:
-      pkce.code.challenge.method: S256
-      access.token.lifespan: "900"
+      pkce.code.challenge.method: 'S256'
+      access.token.lifespan: '900'
