@@ -42,7 +42,8 @@ dependencies {
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
-	implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
+	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
@@ -56,13 +57,12 @@ dependencies {
 	liquibaseRuntime 'org.liquibase:liquibase-core'
 	liquibaseRuntime 'info.picocli:picocli:4.7.5'
 	liquibaseRuntime 'org.postgresql:postgresql'
-	liquibaseRuntime sourceSets.main.output  // Include project classes and resources
+	liquibaseRuntime sourceSets.main.output
 
 	runtimeOnly 'org.postgresql:postgresql:42.7.3',
 			'io.jsonwebtoken:jjwt-impl:0.12.5',
 			'io.jsonwebtoken:jjwt-jackson:0.12.5'
 			'org.bouncycastle:bcprov-jdk18on:1.81'
-
 }
 
 liquibase {
@@ -71,12 +71,12 @@ liquibase {
 			changelogFile 'db/changelog/db.changelog-master.xml'
 			searchPath 'src/main/resources'
 			url "jdbc:postgresql://${System.getenv('PG_HOST')}:${System.getenv('PG_PORT')}/${System.getenv('PG_NAME')}"
-			username System.getenv('PG_USER')
-			password System.getenv('PG_PASS')
+			username System.getenv('PG_LB_USER')
+			password System.getenv('PG_LB_PASS')
 			driver 'org.postgresql.Driver'
 		}
 	}
-	runList = 'main'  // Use the 'main' activity by default for Liquibase tasks
+	runList = 'main'
 }
 
 test {

@@ -2,8 +2,8 @@ server.port: ${LB_PORT}
 spring:
   datasource:
     url: jdbc:postgresql://${PG_HOST}:${PG_PORT}/${PG_NAME}
-    username: ${PG_USER}
-    password: ${PG_PASS}
+    username: ${PG_LB_USER}
+    password: ${PG_LB_PASS}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -27,6 +27,14 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${AUTH_ISSUER}
+          issuer-uri: ${AUTH_BASE_URL}/realms/${AUTH_REALM}
+
+auth:
+  kc:
+    base-url: ${AUTH_BASE_URL}
+    realm: ${AUTH_REALM}
+    client-id: ${LB_CLIENT_ID}
+    client-secret: ${LB_CLIENT_SECRET}
+
 app:
   security.expected-audience: lifebalance

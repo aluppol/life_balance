@@ -32,7 +32,7 @@ public class PersonRepositoryIT {
 
     @Test
     void safeAndFind() {
-        Person saved = repo.save(Person.builder().firstName("Alice").lastName("Smith").userId(1L).build());
+        Person saved = repo.save(Person.builder().firstName("Alice").lastName("Smith").uuid("uuid").build());
         assertTrue(repo.findById(saved.getId()).isPresent());
     }
 

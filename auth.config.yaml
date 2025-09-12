@@ -38,3 +38,5 @@ clients:
     attributes:
       pkce.code.challenge.method: 'S256'
       access.token.lifespan: '900'
+
+editUsernameAllowed: true

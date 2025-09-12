@@ -16,8 +16,8 @@ jobs:
       PG_NAME: ${{ secrets.PG_NAME }}
       POSTGRES_USER: ${{ secrets.PG_ROOT_USER }}
       POSTGRES_PASSWORD: ${{ secrets.PG_ROOT_PASS }}
-      PG_USER: ${{ secrets.PG_USER }}
-      PG_PASS: ${{ secrets.PG_PASS }}
+      PG_LB_USER: ${{ secrets.PG_LB_USER }}
+      PG_LB_PASS: ${{ secrets.PG_LB_PASS }}
 
     services:
       postgres:
@@ -72,8 +72,8 @@ jobs:
           PGHOST: localhost
           POSTGRES_USER: ${{ secrets.PG_ROOT_USER }}
           POSTGRES_DB: ${{ secrets.PG_NAME }}
-          PG_USER: ${{ secrets.PG_USER }}
-          PG_PASS: ${{ secrets.PG_PASS }}
+          PG_LB_USER: ${{ secrets.PG_LB_USER }}
+          PG_LB_PASS: ${{ secrets.PG_LB_PASS }}
           PGPASSWORD: ${{ secrets.PG_ROOT_PASS }}
 
       - name: Set up JDK 21

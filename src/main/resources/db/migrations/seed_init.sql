@@ -1,17 +1,17 @@
 -- up
 
 -- Insert data into Person (10 rows)
-INSERT INTO Person (first_name, last_name, middle_name, phone_number, address) VALUES
-('John', 'Doe', 'Michael', 1234567890, '123 Main St'),
-('Jane', 'Smith', 'Elizabeth', 2345678901, '456 Oak St'),
-('Alice', 'Johnson', 'Marie', 3456789012, '789 Pine St'),
-('Bob', 'Brown', 'Alexander', 4567890123, '101 Maple St'),
-('Charlie', 'Davis', 'Nathan', 5678901234, '202 Birch St'),
-('Diana', 'Wilson', 'Claire', 6789012345, '303 Cedar St'),
-('Ethan', 'Moore', 'James', 7890123456, '404 Walnut St'),
-('Fiona', 'Taylor', 'Rose', 8901234567, '505 Cherry St'),
-('George', 'Anderson', 'Robert', 9012345678, '606 Spruce St'),
-('Hannah', 'Martinez', 'Grace', 1230984567, '707 Elm St');
+INSERT INTO Person (uuid, first_name, last_name, middle_name, phone_number, address) VALUES
+('uuid_placeholder', 'John', 'Doe', 'Michael', 1234567890, '123 Main St'),
+('uuid_placeholder', 'Jane', 'Smith', 'Elizabeth', 2345678901, '456 Oak St'),
+('uuid_placeholder', 'Alice', 'Johnson', 'Marie', 3456789012, '789 Pine St'),
+('uuid_placeholder', 'Bob', 'Brown', 'Alexander', 4567890123, '101 Maple St'),
+('uuid_placeholder', 'Charlie', 'Davis', 'Nathan', 5678901234, '202 Birch St'),
+('uuid_placeholder', 'Diana', 'Wilson', 'Claire', 6789012345, '303 Cedar St'),
+('uuid_placeholder', 'Ethan', 'Moore', 'James', 7890123456, '404 Walnut St'),
+('uuid_placeholder', 'Fiona', 'Taylor', 'Rose', 8901234567, '505 Cherry St'),
+('uuid_placeholder', 'George', 'Anderson', 'Robert', 9012345678, '606 Spruce St'),
+('uuid_placeholder', 'Hannah', 'Martinez', 'Grace', 1230984567, '707 Elm St');
 
 -- Insert data into Enterprise (5 rows)
 INSERT INTO Enterprise (name, description) VALUES
