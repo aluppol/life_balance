@@ -54,7 +54,7 @@ dependencies {
 	liquibaseRuntime 'org.postgresql:postgresql'
 	liquibaseRuntime sourceSets.main.output  // Include project classes and resources
 
-	runtimeOnly 'org.postgresql:postgresql:42.7.11'
+	runtimeOnly 'org.postgresql:postgresql:42.7.12'
 
 }
 
