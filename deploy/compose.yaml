@@ -1,0 +1,59 @@
+name: lifebalance
+
+services:
+  web:
+    image: ${IMAGE_WEB}
+    environment:
+      PG_HOST: db
+      PG_PORT: "5432"
+      PG_NAME: lifebalance
+      PG_USER: lifebalance_app
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 120s
+    networks: [back, data, egress]
+    mem_limit: 960m
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+
+  db:
+    image: ${IMAGE_DB}
+    # Starting as postgres skips the entrypoint's chown/gosu step, which cap_drop ALL would forbid.
+    user: postgres
+    environment:
+      POSTGRES_DB: lifebalance
+      POSTGRES_USER: postgres
+      PG_USER: lifebalance_app
+    env_file: .env
+    healthcheck:
+      # Over TCP: during first-start initialisation Postgres listens on its socket only, so this stays red until it is really up.
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "postgres", "-d", "lifebalance"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks: [data]
+    mem_limit: 256m
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+
+networks:
+  back:
+    external: true
+    name: lifebalance_back
+  data:
+    internal: true
+  egress: {}
+
+volumes:
+  pgdata: {}
