@@ -97,8 +97,14 @@ class SecurityTest extends WebTest {
     }
 
     @Test
-    void responses_carryAContentSecurityPolicy() throws Exception {
+    void responses_carryBrowserProtections() throws Exception {
         mvc.perform(get("/api/values").with(member()))
-                .andExpect(header().string("Content-Security-Policy", containsString("frame-ancestors 'none'")));
+                .andExpect(header().string("Content-Security-Policy", containsString("frame-ancestors 'none'")))
+                .andExpect(header().string("Referrer-Policy", "no-referrer"))
+                .andExpect(header().string("Permissions-Policy", containsString("camera=()")))
+                .andExpect(header().string("Cross-Origin-Opener-Policy", "same-origin"))
+                .andExpect(header().string("Cross-Origin-Resource-Policy", "same-origin"))
+                .andExpect(header().string("X-Frame-Options", "DENY"))
+                .andExpect(header().string("X-Content-Type-Options", "nosniff"));
     }
 }

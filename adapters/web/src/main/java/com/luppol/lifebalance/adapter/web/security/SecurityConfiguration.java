@@ -1,17 +1,21 @@
 package com.luppol.lifebalance.adapter.web.security;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
 import org.springframework.security.oauth2.server.resource.web.HeaderBearerTokenResolver;
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.header.writers.CrossOriginOpenerPolicyHeaderWriter.CrossOriginOpenerPolicy;
+import org.springframework.security.web.header.writers.CrossOriginResourcePolicyHeaderWriter.CrossOriginResourcePolicy;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
 
 @Configuration
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
@@ -27,6 +31,8 @@ public class SecurityConfiguration {
             "base-uri 'none'",
             "form-action 'self'",
             "frame-ancestors 'none'");
+    private static final String PERMISSIONS_POLICY =
+            "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()";
 
     @Bean
     SecurityFilterChain plannerSecurity(HttpSecurity http, JwtAuthenticationConverter realmRolesAuthentication)
@@ -40,8 +46,16 @@ public class SecurityConfiguration {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .csrf(AbstractHttpConfigurer::disable)
                 .addFilterBefore(new FetchMetadataFilter(), BearerTokenAuthenticationFilter.class)
-                .headers(headers -> headers.contentSecurityPolicy(policy -> policy.policyDirectives(CONTENT_SECURITY_POLICY)))
+                .headers(SecurityConfiguration::browserProtections)
                 .build();
+    }
+
+    private static void browserProtections(HeadersConfigurer<HttpSecurity> headers) {
+        headers.contentSecurityPolicy(policy -> policy.policyDirectives(CONTENT_SECURITY_POLICY))
+                .referrerPolicy(referrer -> referrer.policy(ReferrerPolicy.NO_REFERRER))
+                .permissionsPolicyHeader(permissions -> permissions.policy(PERMISSIONS_POLICY))
+                .crossOriginOpenerPolicy(opener -> opener.policy(CrossOriginOpenerPolicy.SAME_ORIGIN))
+                .crossOriginResourcePolicy(resource -> resource.policy(CrossOriginResourcePolicy.SAME_ORIGIN));
     }
 
     @Bean
