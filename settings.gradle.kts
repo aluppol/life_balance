@@ -14,4 +14,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "life-balance"
 
-include("domain")
+include("domain", "application")
