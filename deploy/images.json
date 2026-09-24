@@ -1,0 +1,4 @@
+[
+  {"name": "web", "context": ".", "dockerfile": "deploy/web.Dockerfile"},
+  {"name": "db", "context": ".", "dockerfile": "deploy/db.Dockerfile"}
+]

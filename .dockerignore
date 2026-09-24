@@ -1,0 +1,14 @@
+.git
+.github
+.gradle
+.idea
+.vscode
+.settings
+.classpath
+.project
+bin
+build
+backups
+.env
+deploy/.env
+context.md
