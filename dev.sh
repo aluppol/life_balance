@@ -1,74 +1,69 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
 
-ACTION=$1
+readonly REQUIRED_KEYS=(PG_HOST PG_PORT PG_NAME PG_ROOT_USER PG_ROOT_PASS PG_USER PG_PASS)
+readonly LOCAL_ISSUER="http://localhost:8090/realms/dev"
 
-if [ -z "$ACTION" ]; then
-  echo "Usage: $0 [up|down|hard-reset|migrate|rollback]"
-  exit 1
-fi
-
-load_env() {
-  echo "Loading environment variables from .env..."
-  export $(grep -v '^#' .env | xargs)
+usage() {
+  echo "Usage: $0 {db|backend|frontend|demo-reset|test|down|hard-reset}"
+  echo "  db          start the local Postgres"
+  echo "  backend     start Postgres and the API on :8080, trusting the local dev identity server"
+  echo "  frontend    start the dev identity server on :8090 and the Vite dev server on :5173"
+  echo "  demo-reset  wipe and refill every guest workspace in the local database"
+  echo "  test        full build: tests, coverage and mutation gates, frontend checks"
+  echo "  down        stop the local containers (data kept)"
+  echo "  hard-reset  stop the local containers and DELETE the local database"
 }
 
-case "$ACTION" in
-  up)
-    load_env
-
-    echo "Starting PostgreSQL via Docker Compose..."
-    docker compose up -d
-
-    echo "Swagger UI: http://localhost:8080/swagger-ui.html"
-    echo "Starting Spring Boot app with Gradle..."
-    ./gradlew bootRun
-    ;;
-
-  down)
-    echo "Stopping Docker Compose services..."
-    docker compose down
-
-    echo "Spring Boot app is stopped (if run via Gradle, stop manually with Ctrl+C)."
-    ;;
-
-  hard-reset)
-    load_env
-
-    echo "Stopping and removing containers and volumes..."
-    docker compose down -v --remove-orphans
-
-    echo "Rebuilding containers from scratch..."
-    docker compose up -d --build
-
-    echo "Starting Spring Boot app with Gradle..."
-    ./gradlew bootRun
-    ;;
-
-  migrate)
-    load_env
-
-    echo "Running Liquibase migration (update)..."
-    ./gradlew update
-    ;;
-
-  rollback)
-    load_env
-
-    echo "Rolling back last Liquibase changeset (rollbackCount = 1)..."
-    ./gradlew rollbackCount -PliquibaseCommandValue=1
-    ;;
-
-  test)
-    echo "Running unit & integration tests with coverage…"
-    ./gradlew clean test jacocoTestReport
-    REPORT="build/reports/jacoco/test/html/index.html"
-    echo "✔ Coverage report → file://$PWD/$REPORT"
-  ;;
-
-  *)
-    echo "Invalid option: $ACTION"
-    echo "Usage: $0 [up|down|hard-reset|migrate|rollback]"
+load_env() {
+  if [[ ! -f .env ]]; then
+    echo "Missing .env: copy .env.example to .env and fill it in"
     exit 1
-    ;;
+  fi
+  set -a
+  source .env
+  set +a
+  require_keys
+}
+
+require_keys() {
+  local missing=()
+  for key in "${REQUIRED_KEYS[@]}"; do
+    [[ -n "${!key:-}" ]] || missing+=("$key")
+  done
+  if (( ${#missing[@]} > 0 )); then
+    echo "Missing keys in .env: ${missing[*]}"
+    exit 1
+  fi
+}
+
+start_database() {
+  docker compose up --detach --wait postgres
+}
+
+run_backend() {
+  AUTH_ISSUER="$LOCAL_ISSUER" \
+  AUTH_JWK_SET_URI="$LOCAL_ISSUER/protocol/openid-connect/certs" \
+    ./gradlew :bootstrap:bootRun "$@"
+}
+
+run_frontend() {
+  cd frontend
+  source "$HOME/.nvm/nvm.sh"
+  nvm use
+  npm ci
+  trap 'kill 0' EXIT
+  npm run dev:identity &
+  npm run dev
+}
+
+case "${1:-}" in
+  db) load_env; start_database ;;
+  backend) load_env; start_database; run_backend ;;
+  frontend) run_frontend ;;
+  demo-reset) load_env; start_database; run_backend --args=demo-reset ;;
+  test) ./gradlew clean build ;;
+  down) docker compose down ;;
+  hard-reset) docker compose down --volumes --remove-orphans ;;
+  *) usage; exit 1 ;;
 esac

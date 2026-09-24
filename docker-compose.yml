@@ -1,8 +1,10 @@
+name: life-balance-dev
+
 services:
   postgres:
-    image: postgres:16
+    image: postgres:16-alpine
     ports:
-      - "${PG_PORT}:5432"
+      - "127.0.0.1:${PG_PORT}:5432"
     environment:
       POSTGRES_DB: ${PG_NAME}
       POSTGRES_USER: ${PG_ROOT_USER}
@@ -10,13 +12,13 @@ services:
       PG_USER: ${PG_USER}
       PG_PASS: ${PG_PASS}
     volumes:
-      - pgdata:/var/lib/postgresql/data
-      - ./db/postgres-init.sh:/docker-entrypoint-initdb.d/init.sh
-    networks:
-      - life_balance
+      - planner-data:/var/lib/postgresql/data
+      - ./db/postgres-init.sh:/docker-entrypoint-initdb.d/init.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 20
 
 volumes:
-  pgdata:
-
-networks:
-  life_balance:
+  planner-data:

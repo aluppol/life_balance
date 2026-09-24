@@ -1,42 +1,25 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-# Usage: ./create_migration.sh add-person-table
-NAME=$1
-UUID=$(uuidgen)
-NOW_UTC=$(date -u +%s)
-SECONDS_SINCE_1900=$((NOW_UTC + 2208988800))
-FILE_REL="db/changelog/migrations/${SECONDS_SINCE_1900}-${NAME}.sql"
-FILE_PATH="src/main/resources/${FILE_REL}"
-MASTER_FILE="src/main/resources/db/changelog/db.changelog-master.xml"
-INCLUDE_LINE="    <include file=\"$FILE_REL\"/>"
+readonly NAME="${1:?Usage: $0 <migration-name>, e.g. $0 add-journal-table}"
+readonly RESOURCES="adapters/persistence/src/main/resources"
+readonly MASTER_FILE="$RESOURCES/db/changelog/db.changelog-master.xml"
 
-mkdir -p src/main/resources/db/changelog/migrations
+changeset_id=$(uuidgen | tr '[:upper:]' '[:lower:]')
+seconds_since_1900=$(( $(date -u +%s) + 2208988800 ))
+relative_path="db/changelog/migrations/${seconds_since_1900}-${NAME}.sql"
+include_line="    <include file=\"$relative_path\"/>"
 
-cat <<EOF > "$FILE_PATH"
+cat > "$RESOURCES/$relative_path" <<SQL
 --liquibase formatted sql
---changeset aluppol:${UUID}
-
--- SQL goes here
+--changeset aluppol:${changeset_id}
 
 --rollback
--- rollback goes here
-EOF
+SQL
 
-echo "Created migration: $FILE_PATH"
-echo "Changeset UUID: $UUID"
-
-# Add <include> line to master changelog (cross-platform)
-if ! grep -Fxq "$INCLUDE_LINE" "$MASTER_FILE"; then
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        # macOS (BSD sed)
-        sed -i '' "/<\/databaseChangeLog>/i\\
-$INCLUDE_LINE
-" "$MASTER_FILE"
-    else
-        # Linux (GNU sed)
-        sed -i "/<\/databaseChangeLog>/i $INCLUDE_LINE" "$MASTER_FILE"
-    fi
-    echo "Appended to master changelog: $MASTER_FILE"
-else
-    echo "Include already exists in master changelog."
+if ! grep -Fxq "$include_line" "$MASTER_FILE"; then
+  awk -v line="$include_line" '/<\/databaseChangeLog>/ { print line } { print }' "$MASTER_FILE" > "$MASTER_FILE.tmp"
+  mv "$MASTER_FILE.tmp" "$MASTER_FILE"
 fi
+
+echo "Created $RESOURCES/$relative_path (changeset aluppol:${changeset_id})"
