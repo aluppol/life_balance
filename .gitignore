@@ -43,3 +43,6 @@ build/
 .gradle/
 .idea/
 .vscode/
+
+# Agent context (local only)
+context.md
