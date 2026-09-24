@@ -1,0 +1,51 @@
+spring:
+  application:
+    name: life-balance
+  config:
+    import: classpath:persistence.yml
+  datasource:
+    url: jdbc:postgresql://${PG_HOST}:${PG_PORT}/${PG_NAME}
+    username: ${PG_USER}
+    password: ${PG_PASS}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${AUTH_ISSUER:https://auth.luppol.com/realms/luppol}
+          jwk-set-uri: ${AUTH_JWK_SET_URI:https://auth.luppol.com/realms/luppol/protocol/openid-connect/certs}
+          audiences: ${AUTH_AUDIENCE:lifebalance}
+          jws-algorithms: RS256
+  threads:
+    virtual:
+      enabled: true
+
+server:
+  port: 8080
+  shutdown: graceful
+  error:
+    include-stacktrace: never
+    include-message: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+      group:
+        readiness:
+          include: readinessState, db
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+lifebalance:
+  security:
+    access-token-header: ${AUTH_TOKEN_HEADER:X-Forwarded-Access-Token}
+  demo:
+    time-zone: ${DEMO_TIME_ZONE:America/Chicago}

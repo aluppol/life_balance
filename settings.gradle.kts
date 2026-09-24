@@ -14,4 +14,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "life-balance"
 
-include("domain", "application", "adapters:persistence", "adapters:web")
+include("domain", "application", "adapters:persistence", "adapters:web", "bootstrap")
