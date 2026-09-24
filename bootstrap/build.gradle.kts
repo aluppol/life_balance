@@ -3,7 +3,13 @@ plugins {
     `jacoco-report-aggregation`
 }
 
+val singlePageApplication = configurations.dependencyScope("singlePageApplication")
+val singlePageApplicationFiles = configurations.resolvable("singlePageApplicationFiles") {
+    extendsFrom(singlePageApplication.get())
+}
+
 dependencies {
+    singlePageApplication(project(path = ":frontend", configuration = "singlePageApplication"))
     implementation(project(":application"))
     implementation(project(":adapters:persistence"))
     implementation(project(":adapters:web"))
@@ -18,6 +24,12 @@ dependencies {
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.testcontainers.junit.jupiter)
     testImplementation(libs.archunit.junit5)
+}
+
+tasks.processResources {
+    from(singlePageApplicationFiles) {
+        into("static")
+    }
 }
 
 tasks.bootJar {

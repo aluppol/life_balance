@@ -8,6 +8,7 @@ pitest = "1.30.0"
 pitest-junit5 = "1.2.3"
 pitest-gradle-plugin = "1.19.0"
 node-gradle-plugin = "7.1.0"
+nodejs = "24.21.0"
 
 [libraries]
 spring-boot-dependencies = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot" }
@@ -35,8 +36,6 @@ junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher
 assertj-core = { module = "org.assertj:assertj-core" }
 spring-boot-gradle-plugin = { module = "org.springframework.boot:spring-boot-gradle-plugin", version.ref = "spring-boot" }
 pitest-gradle-plugin = { module = "info.solidsoft.gradle.pitest:gradle-pitest-plugin", version.ref = "pitest-gradle-plugin" }
-node-gradle-plugin = { module = "com.github.node-gradle:gradle-node-plugin", version.ref = "node-gradle-plugin" }
 
 [plugins]
-spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
 node = { id = "com.github.node-gradle.node", version.ref = "node-gradle-plugin" }
