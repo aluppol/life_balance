@@ -1,0 +1,9 @@
+.meter {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.caption {
+  margin: 0;
+  font-weight: 600;
+}

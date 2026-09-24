@@ -1,0 +1,23 @@
+.page {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.header {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.title {
+  font-size: clamp(1.6rem, 1.2rem + 1.5vw, 2.1rem);
+}
+
+.title:focus {
+  outline: none;
+}
+
+.intro {
+  margin: 0;
+  max-width: 65ch;
+  color: var(--color-text-muted);
+}
