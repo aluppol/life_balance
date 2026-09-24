@@ -8,6 +8,7 @@ import static com.luppol.lifebalance.domain.Invariants.requirePresent;
 import static com.luppol.lifebalance.domain.Invariants.requireText;
 
 public record LifeRole(LifeRoleId id, PersonId owner, String name, String description, LifeRoleKind kind, int position) {
+    public static final int MAXIMUM_PER_PERSON = 20;
     public static final int MAXIMUM_NAME_LENGTH = 100;
     public static final int MAXIMUM_DESCRIPTION_LENGTH = 1000;
     public static final String SHARPEN_THE_SAW_NAME = "Sharpen the Saw";

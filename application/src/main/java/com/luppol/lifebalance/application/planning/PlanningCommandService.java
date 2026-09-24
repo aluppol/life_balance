@@ -1,5 +1,6 @@
 package com.luppol.lifebalance.application.planning;
 
+import com.luppol.lifebalance.domain.Invariants;
 import com.luppol.lifebalance.domain.RuleViolationException;
 import com.luppol.lifebalance.domain.goal.Goal;
 import com.luppol.lifebalance.domain.goal.GoalId;
@@ -26,6 +27,8 @@ public class PlanningCommandService implements PlanningCommands {
 
     @Override
     public void plan(PlanActivity command) {
+        int plannedThisWeek = activities.findAllInWeek(command.owner(), command.week()).size();
+        Invariants.requireRoomForOneMore(plannedThisWeek, PlannedActivity.MAXIMUM_PER_WEEK, "activities in a week");
         requireOwnedReferences(command.owner(), command.details());
         activities.add(PlannedActivity.planned(command.id(), command.owner(), command.week(), command.details()));
     }

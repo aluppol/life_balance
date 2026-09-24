@@ -25,6 +25,12 @@ public final class Invariants {
         }
     }
 
+    public static void requireRoomForOneMore(int count, int maximum, String subject) {
+        if (count >= maximum) {
+            throw new RuleViolationException("A person can keep at most %d %s".formatted(maximum, subject));
+        }
+    }
+
     public static void requireNotNegative(int value, String subject) {
         if (value < 0) {
             throw new RuleViolationException("%s must not be negative".formatted(subject));

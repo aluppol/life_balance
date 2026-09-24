@@ -6,6 +6,8 @@ import com.luppol.lifebalance.domain.person.PersonId;
 import static com.luppol.lifebalance.domain.Invariants.requirePresent;
 
 public record Goal(GoalId id, PersonId owner, GoalDetails details, GoalStatus status) {
+    public static final int MAXIMUM_PER_PERSON = 200;
+
     public Goal {
         requirePresent(id, "Goal id");
         requirePresent(owner, "Goal owner");

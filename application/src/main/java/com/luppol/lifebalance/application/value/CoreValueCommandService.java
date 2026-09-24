@@ -1,6 +1,7 @@
 package com.luppol.lifebalance.application.value;
 
 import com.luppol.lifebalance.domain.ConflictException;
+import com.luppol.lifebalance.domain.Invariants;
 import com.luppol.lifebalance.domain.Ordering;
 import com.luppol.lifebalance.domain.person.PersonId;
 import com.luppol.lifebalance.domain.value.CoreValue;
@@ -23,6 +24,7 @@ public class CoreValueCommandService implements CoreValueCommands {
     @Override
     public void add(AddCoreValue command) {
         List<CoreValue> existing = coreValues.findAllByOwner(command.owner());
+        Invariants.requireRoomForOneMore(existing.size(), CoreValue.MAXIMUM_PER_PERSON, "core values");
         requireUniqueName(existing, command.name());
         int position = Ordering.nextPosition(existing, CoreValue::position);
         coreValues.add(new CoreValue(command.id(), command.owner(), command.name(), command.description(), position));

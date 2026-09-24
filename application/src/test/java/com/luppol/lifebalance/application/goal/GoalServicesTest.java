@@ -121,6 +121,18 @@ class GoalServicesTest {
         assertThatThrownBy(() -> commands.remove(OWNER, unknown)).isInstanceOf(NotFoundException.class);
     }
 
+
+    @Test
+    void set_rejectsGoalsBeyondTheMaximum() {
+        for (int index = 0; index < Goal.MAXIMUM_PER_PERSON; index++) {
+            store.goals().add(Goal.set(GoalId.random(), OWNER, details("Goal " + index)));
+        }
+
+        assertThatThrownBy(() -> set(details("One too many")))
+                .isInstanceOf(RuleViolationException.class)
+                .hasMessage("A person can keep at most 200 goals");
+    }
+
     private GoalId set(GoalDetails details) {
         GoalId id = GoalId.random();
         commands.set(new SetGoal(id, OWNER, details));

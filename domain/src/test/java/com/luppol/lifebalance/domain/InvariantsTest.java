@@ -65,4 +65,16 @@ class InvariantsTest {
                 .isInstanceOf(RuleViolationException.class)
                 .hasMessage("Position must not be negative");
     }
+
+    @Test
+    void requireRoomForOneMore_acceptsOneBelowTheMaximum() {
+        assertThatCode(() -> Invariants.requireRoomForOneMore(29, 30, "core values")).doesNotThrowAnyException();
+    }
+
+    @Test
+    void requireRoomForOneMore_rejectsAFullCollection() {
+        assertThatThrownBy(() -> Invariants.requireRoomForOneMore(30, 30, "core values"))
+                .isInstanceOf(RuleViolationException.class)
+                .hasMessage("A person can keep at most 30 core values");
+    }
 }

@@ -1,6 +1,7 @@
 package com.luppol.lifebalance.application.role;
 
 import com.luppol.lifebalance.domain.ConflictException;
+import com.luppol.lifebalance.domain.Invariants;
 import com.luppol.lifebalance.domain.Ordering;
 import com.luppol.lifebalance.domain.person.PersonId;
 import com.luppol.lifebalance.domain.role.LifeRole;
@@ -23,6 +24,7 @@ public class LifeRoleCommandService implements LifeRoleCommands {
     @Override
     public void add(AddLifeRole command) {
         List<LifeRole> existing = lifeRoles.findAllByOwner(command.owner());
+        Invariants.requireRoomForOneMore(existing.size(), LifeRole.MAXIMUM_PER_PERSON, "life roles");
         requireUniqueName(existing, command.name());
         int position = Ordering.nextPosition(existing, LifeRole::position);
         lifeRoles.add(LifeRole.personal(command.id(), command.owner(), command.name(), command.description(), position));

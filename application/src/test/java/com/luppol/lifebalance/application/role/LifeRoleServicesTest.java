@@ -141,6 +141,18 @@ class LifeRoleServicesTest {
         assertThatThrownBy(() -> commands.remove(OWNER, unknown)).isInstanceOf(NotFoundException.class);
     }
 
+
+    @Test
+    void add_rejectsTheTwentyFirstRole() {
+        for (int index = 1; index < LifeRole.MAXIMUM_PER_PERSON; index++) {
+            add("Role " + index);
+        }
+
+        assertThatThrownBy(() -> add("One too many"))
+                .isInstanceOf(RuleViolationException.class)
+                .hasMessage("A person can keep at most 20 life roles");
+    }
+
     private LifeRoleId add(String name) {
         LifeRoleId id = LifeRoleId.random();
         commands.add(new AddLifeRole(id, OWNER, name, ""));

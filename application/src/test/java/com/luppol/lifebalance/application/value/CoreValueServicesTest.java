@@ -120,6 +120,18 @@ class CoreValueServicesTest {
         assertThatThrownBy(() -> queries.find(OWNER, unknown)).isInstanceOf(NotFoundException.class);
     }
 
+
+    @Test
+    void add_rejectsTheThirtyFirstValue() {
+        for (int index = 0; index < CoreValue.MAXIMUM_PER_PERSON; index++) {
+            add("Value " + index);
+        }
+
+        assertThatThrownBy(() -> add("One too many"))
+                .isInstanceOf(RuleViolationException.class)
+                .hasMessage("A person can keep at most 30 core values");
+    }
+
     private CoreValueId add(String name) {
         CoreValueId id = CoreValueId.random();
         commands.add(new AddCoreValue(id, OWNER, name, "About " + name));

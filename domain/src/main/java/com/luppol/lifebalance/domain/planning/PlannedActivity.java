@@ -9,6 +9,8 @@ import static com.luppol.lifebalance.domain.Invariants.requirePresent;
 
 public record PlannedActivity(ActivityId id, PersonId owner, WeekStart week, ActivityDetails details,
                               boolean isCompleted) {
+    public static final int MAXIMUM_PER_WEEK = 150;
+
     public PlannedActivity {
         requirePresent(id, "Activity id");
         requirePresent(owner, "Activity owner");

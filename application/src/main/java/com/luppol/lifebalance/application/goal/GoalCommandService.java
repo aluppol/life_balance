@@ -1,5 +1,6 @@
 package com.luppol.lifebalance.application.goal;
 
+import com.luppol.lifebalance.domain.Invariants;
 import com.luppol.lifebalance.domain.RuleViolationException;
 import com.luppol.lifebalance.domain.goal.Goal;
 import com.luppol.lifebalance.domain.goal.GoalDetails;
@@ -28,6 +29,7 @@ public class GoalCommandService implements GoalCommands {
 
     @Override
     public void set(SetGoal command) {
+        Invariants.requireRoomForOneMore(goals.findAllByOwner(command.owner()).size(), Goal.MAXIMUM_PER_PERSON, "goals");
         requireOwnedReferences(command.owner(), command.details());
         goals.add(Goal.set(command.id(), command.owner(), command.details()));
     }

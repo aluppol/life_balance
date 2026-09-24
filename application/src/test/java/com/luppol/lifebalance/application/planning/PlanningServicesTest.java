@@ -138,6 +138,19 @@ class PlanningServicesTest {
         assertThat(scorecard.bigRocks()).isEqualTo(new Tally(2, 1));
     }
 
+
+    @Test
+    void plan_rejectsActivitiesBeyondTheWeeklyMaximum() {
+        for (int index = 0; index < PlannedActivity.MAXIMUM_PER_WEEK; index++) {
+            store.activities().add(PlannedActivity.planned(ActivityId.random(), OWNER, WEEK, details(parent.id(), Optional.empty())));
+        }
+
+        assertThatThrownBy(() -> plan(details(parent.id(), Optional.empty())))
+                .isInstanceOf(RuleViolationException.class)
+                .hasMessage("A person can keep at most 150 activities in a week");
+        assertThat(queries.listWeek(OWNER, WEEK.previous())).isEmpty();
+    }
+
     private ActivityId plan(ActivityDetails details) {
         ActivityId id = ActivityId.random();
         commands.plan(new PlanActivity(id, OWNER, WEEK, details));
