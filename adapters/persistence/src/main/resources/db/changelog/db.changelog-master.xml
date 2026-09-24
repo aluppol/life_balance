@@ -5,6 +5,7 @@
         xsi:schemaLocation="
         http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
-<include file="db/changelog/migrations/3955121491-init-base-tables.sql"/>
-
+    <include file="db/changelog/migrations/3955121491-init-base-tables.sql"/>
+    <include file="db/changelog/migrations/3999205283-drop-legacy-tables.sql"/>
+    <include file="db/changelog/migrations/3999205284-planner-schema.sql"/>
 </databaseChangeLog>
