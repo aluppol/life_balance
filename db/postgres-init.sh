@@ -1,49 +1,18 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
-# Required environment variables
-required_vars=(
-  POSTGRES_USER
-  POSTGRES_DB
-  PG_USER
-  PG_PASS
-)
-
-for v in "${required_vars[@]}"; do
-  if [ -z "${!v}" ]; then
-    echo "Missing env var: $v"
+for name in POSTGRES_USER POSTGRES_DB PG_USER PG_PASS; do
+  if [[ -z "${!name:-}" ]]; then
+    echo "Missing environment variable: $name" >&2
     exit 1
   fi
 done
 
-# Create application user
-psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
-  DO \$\$
-  BEGIN
-    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '$PG_USER') THEN
-      CREATE USER $PG_USER WITH PASSWORD '$PG_PASS';
-    END IF;
-  END
-  \$\$;
-  GRANT CONNECT ON DATABASE $POSTGRES_DB TO $PG_USER;
-EOSQL
-
-# Grant schema and object privileges
-psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
-  CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
-  GRANT USAGE, CREATE ON SCHEMA public TO $PG_USER;
-  GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO $PG_USER;
-
-  ALTER DEFAULT PRIVILEGES IN SCHEMA public
-    GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO $PG_USER;
-
-  CREATE SCHEMA IF NOT EXISTS core AUTHORIZATION $PG_USER;
-
-  GRANT USAGE, CREATE ON SCHEMA core TO $PG_USER;
-  GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA core TO $PG_USER;
-
-  ALTER DEFAULT PRIVILEGES IN SCHEMA core
-    GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO $PG_USER;
-
-EOSQL
+psql --set ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" \
+  --set app_user="$PG_USER" --set app_password="$PG_PASS" --set database="$POSTGRES_DB" <<'SQL'
+SELECT format('CREATE ROLE %I LOGIN PASSWORD %L', :'app_user', :'app_password')
+WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = :'app_user') \gexec
+SELECT format('GRANT CONNECT ON DATABASE %I TO %I', :'database', :'app_user') \gexec
+SELECT format('GRANT USAGE, CREATE ON SCHEMA public TO %I', :'app_user') \gexec
+SELECT format('CREATE SCHEMA IF NOT EXISTS core AUTHORIZATION %I', :'app_user') \gexec
+SQL
