@@ -46,3 +46,6 @@ build/
 
 # Agent context (local only)
 context.md
+
+# Local database dumps
+backups/
