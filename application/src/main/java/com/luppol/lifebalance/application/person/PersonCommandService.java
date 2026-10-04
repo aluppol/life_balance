@@ -1,6 +1,7 @@
 package com.luppol.lifebalance.application.person;
 
 import com.luppol.lifebalance.application.demo.DemoWorkspace;
+import com.luppol.lifebalance.domain.person.GuestWorkspaceLimit;
 import com.luppol.lifebalance.domain.person.Person;
 import com.luppol.lifebalance.domain.person.PersonId;
 import com.luppol.lifebalance.domain.person.PersonRepository;
@@ -11,11 +12,14 @@ public class PersonCommandService implements PersonCommands {
     private final PersonRepository people;
     private final LifeRoleRepository lifeRoles;
     private final DemoWorkspace demoWorkspace;
+    private final GuestWorkspaceLimit guestWorkspaceLimit;
 
-    public PersonCommandService(PersonRepository people, LifeRoleRepository lifeRoles, DemoWorkspace demoWorkspace) {
+    public PersonCommandService(PersonRepository people, LifeRoleRepository lifeRoles, DemoWorkspace demoWorkspace,
+                                GuestWorkspaceLimit guestWorkspaceLimit) {
         this.people = people;
         this.lifeRoles = lifeRoles;
         this.demoWorkspace = demoWorkspace;
+        this.guestWorkspaceLimit = guestWorkspaceLimit;
     }
 
     @Override
@@ -25,16 +29,18 @@ public class PersonCommandService implements PersonCommands {
 
     @Override
     public void enrollGuest(PersonId id) {
+        makeRoomForOneMoreGuest();
         enroll(Person.guest(id));
         demoWorkspace.furnish(id);
     }
 
     @Override
     public void resetGuestWorkspaces() {
-        for (PersonId guest : people.findGuests()) {
-            people.remove(guest);
-            enrollGuest(guest);
-        }
+        people.removeAllGuests();
+    }
+
+    private void makeRoomForOneMoreGuest() {
+        people.removeAllButNewestGuests(guestWorkspaceLimit.maximum() - 1);
     }
 
     private void enroll(Person person) {

@@ -24,11 +24,6 @@ public class InMemoryPersonRepository implements PersonRepository {
     }
 
     @Override
-    public List<PersonId> findGuests() {
-        return people.values().stream().filter(person -> person.kind() == PersonKind.GUEST).map(Person::id).toList();
-    }
-
-    @Override
     public void enroll(Person person) {
         if (people.putIfAbsent(person.id(), person) != null) {
             throw new PersonAlreadyEnrolledException(person.id());
@@ -36,12 +31,26 @@ public class InMemoryPersonRepository implements PersonRepository {
     }
 
     @Override
-    public void remove(PersonId id) {
-        people.remove(id);
-        store.removeEverythingOf(id);
+    public void removeAllGuests() {
+        guestsOldestFirst().forEach(this::remove);
+    }
+
+    @Override
+    public void removeAllButNewestGuests(int newestToKeep) {
+        List<PersonId> guests = guestsOldestFirst();
+        guests.subList(0, Math.max(0, guests.size() - newestToKeep)).forEach(this::remove);
     }
 
     public Person find(PersonId id) {
         return people.get(id);
+    }
+
+    private List<PersonId> guestsOldestFirst() {
+        return people.values().stream().filter(person -> person.kind() == PersonKind.GUEST).map(Person::id).toList();
+    }
+
+    private void remove(PersonId id) {
+        people.remove(id);
+        store.removeEverythingOf(id);
     }
 }

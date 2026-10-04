@@ -8,4 +8,5 @@
     <include file="db/changelog/migrations/3955121491-init-base-tables.sql"/>
     <include file="db/changelog/migrations/3999205283-drop-legacy-tables.sql"/>
     <include file="db/changelog/migrations/3999205284-planner-schema.sql"/>
+    <include file="db/changelog/migrations/4000069869-person-enrolled-at-clock-timestamp.sql"/>
 </databaseChangeLog>

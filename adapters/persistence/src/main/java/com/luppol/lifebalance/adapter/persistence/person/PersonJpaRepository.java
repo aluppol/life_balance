@@ -5,13 +5,15 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
-import java.util.List;
-
 public interface PersonJpaRepository extends JpaRepository<PersonEntity, String> {
-    @Query("select person.id from PersonEntity person where person.kind = :kind order by person.id")
-    List<String> findIdsByKind(PersonKind kind);
+    @Modifying
+    @Query("delete from PersonEntity person where person.kind = :kind")
+    void deleteAllOfKind(PersonKind kind);
 
     @Modifying
-    @Query("delete from PersonEntity person where person.id = :id")
-    void deleteInBulk(String id);
+    @Query("""
+            delete from PersonEntity person where person.id in (
+                select ranked.id from PersonEntity ranked where ranked.kind = :kind
+                order by ranked.enrolledAt desc, ranked.id desc offset :newestToKeep)""")
+    void deleteAllButNewestOfKind(PersonKind kind, int newestToKeep);
 }

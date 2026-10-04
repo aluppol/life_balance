@@ -12,7 +12,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -36,6 +40,22 @@ class TransactionBoundaryIT extends IntegrationTest {
         assertThatThrownBy(() -> personCommands.enrollGuest(guest)).hasMessage("The clock stopped");
 
         assertThat(personQueries.isEnrolled(guest)).isFalse();
+    }
+
+    @Test
+    void failedGuestEnrollment_keepsTheGuestsItWouldHaveEvicted() {
+        when(brokenClock.getZone()).thenReturn(ZoneOffset.UTC);
+        when(brokenClock.instant()).thenReturn(Instant.now());
+        List<PersonId> guests = IntStream.range(0, GUEST_WORKSPACE_LIMIT)
+                .mapToObj(visit -> new PersonId("guest-" + UUID.randomUUID()))
+                .toList();
+        guests.forEach(personCommands::enrollGuest);
+        when(brokenClock.instant()).thenThrow(new IllegalStateException("The clock stopped"));
+
+        assertThatThrownBy(() -> personCommands.enrollGuest(new PersonId("guest-" + UUID.randomUUID())))
+                .hasMessage("The clock stopped");
+
+        assertThat(guests).allMatch(personQueries::isEnrolled);
     }
 
     @Test

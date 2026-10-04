@@ -32,6 +32,7 @@ import com.luppol.lifebalance.application.value.CoreValueQueries;
 import com.luppol.lifebalance.application.value.CoreValueQueryService;
 import com.luppol.lifebalance.domain.goal.GoalRepository;
 import com.luppol.lifebalance.domain.mission.MissionStatementRepository;
+import com.luppol.lifebalance.domain.person.GuestWorkspaceLimit;
 import com.luppol.lifebalance.domain.person.PersonRepository;
 import com.luppol.lifebalance.domain.planning.PlannedActivityRepository;
 import com.luppol.lifebalance.domain.review.WeeklyReviewRepository;
@@ -64,8 +65,9 @@ public class ApplicationServicesConfiguration {
     }
 
     @Bean
-    PersonCommands personCommands(PersonRepository people, LifeRoleRepository lifeRoles, DemoWorkspace demoWorkspace) {
-        return new PersonCommandService(people, lifeRoles, demoWorkspace);
+    PersonCommands personCommands(PersonRepository people, LifeRoleRepository lifeRoles, DemoWorkspace demoWorkspace,
+                                  @Value("${lifebalance.demo.guest-workspace-limit}") int guestWorkspaceLimit) {
+        return new PersonCommandService(people, lifeRoles, demoWorkspace, new GuestWorkspaceLimit(guestWorkspaceLimit));
     }
 
     @Bean

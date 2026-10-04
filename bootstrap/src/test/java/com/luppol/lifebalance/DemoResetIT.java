@@ -14,7 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class DemoResetIT extends IntegrationTest {
-    private final RequestPostProcessor guest = person("guest-" + UUID.randomUUID(), "guest");
+    private final RequestPostProcessor guest = guestVisit("guest-" + UUID.randomUUID(), "session-" + UUID.randomUUID());
 
     @Test
     void demoResetCommand_restoresTheGuestWorkspaceAndExits() throws Exception {

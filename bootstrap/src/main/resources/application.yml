@@ -52,3 +52,4 @@ lifebalance:
     access-token-header: ${AUTH_TOKEN_HEADER:X-Forwarded-Access-Token}
   demo:
     time-zone: ${DEMO_TIME_ZONE:America/Chicago}
+    guest-workspace-limit: ${GUEST_WORKSPACE_LIMIT:500}

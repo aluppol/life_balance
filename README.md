@@ -12,7 +12,7 @@ A weekly planner built on Stephen Covey's *The 7 Habits of Highly Effective Peop
 | **Week and day view** | A Monday–Sunday grid, an unscheduled list and a focused day view with check-offs. |
 | **Weekly review** | A scorecard of planned versus done, by quadrant and by role, plus the review itself and the four dimensions of renewal. |
 
-A shared **guest** account opens a furnished demo planner (mission, values, roles, goals, this week planned, last week reviewed) that is wiped and refilled every night.
+Every **guest** visit opens a furnished demo planner of its own (mission, values, roles, goals, this week planned, last week reviewed): visitors never see each other's changes, and every guest workspace is wiped every night.
 
 ## Architecture
 
@@ -46,9 +46,9 @@ The app runs behind a per-app oauth2-proxy that signs users in against Keycloak 
 
 - it validates the Keycloak **access token** from the gateway's `X-Forwarded-Access-Token` header: RS256 signature against the realm's JWKS, issuer, audience `lifebalance`, expiry; an `Authorization` header is ignored;
 - `/api/**` needs one of the realm roles `USER`, `ADMIN` or `guest`;
-- every query and command is scoped to the signed-in person (the token's `sub`); another person's ids answer `404`, and composite foreign keys in PostgreSQL keep a goal or activity from pointing at someone else's role or goal even if the code were wrong;
+- every query and command is scoped to the signed-in person (the token's `sub`; for a guest, `sub` plus the Keycloak session `sid`); another person's ids answer `404`, and composite foreign keys in PostgreSQL keep a goal or activity from pointing at someone else's role or goal even if the code were wrong;
 - state-changing requests with `Sec-Fetch-Site: cross-site` are refused, and every response carries a strict Content-Security-Policy plus `Referrer-Policy`, `Permissions-Policy`, cross-origin opener and resource policies, `X-Frame-Options` and `nosniff`;
-- the guest account is a sandbox: its data is reset nightly by the `demo-reset` command.
+- guests are sandboxed: each visit (Keycloak session) gets its own demo workspace, a guest token without a session id is refused, each new visit trims the guest workspaces back to `GUEST_WORKSPACE_LIMIT`, oldest first, and the nightly `demo-reset` command deletes them all.
 
 ## Tech stack
 
@@ -80,12 +80,12 @@ cp .env.example .env      # local database settings
 ./dev.sh frontend         # a local dev identity server + the app on http://localhost:5173
 ```
 
-Locally the backend trusts a small development identity server (`frontend/dev/identity-server.mjs`) that signs real RS256 tokens; the Vite dev server adds them to API calls the way the gateway does in production. `DEV_ROLES=guest ./dev.sh frontend` signs in as the demo guest.
+Locally the backend trusts a small development identity server (`frontend/dev/identity-server.mjs`) that signs real RS256 tokens; the Vite dev server adds them to API calls the way the gateway does in production. `DEV_ROLES=guest ./dev.sh frontend` signs in as a demo guest; every start of the identity server is a new visit with a fresh workspace.
 
 | Command | Does |
 |---|---|
 | `./dev.sh test` | the full build with every gate above |
-| `./dev.sh demo-reset` | wipes and refills every guest workspace in the local database |
+| `./dev.sh demo-reset` | deletes every guest workspace in the local database; a guest's next request gets a fresh one |
 | `./dev.sh down` | stops the containers, keeps the data |
 | `./dev.sh hard-reset` | stops the containers and **deletes** the local database |
 | `./db/create_migration.sh <name>` | adds a Liquibase formatted-SQL changeset and registers it |
@@ -106,8 +106,9 @@ The build produces one executable jar, `bootstrap/build/libs/life-balance.jar`, 
 | `AUTH_AUDIENCE` | required audience | `lifebalance` |
 | `AUTH_TOKEN_HEADER` | header carrying the access token | `X-Forwarded-Access-Token` |
 | `DEMO_TIME_ZONE` | time zone that decides "this week" for the demo data | `America/Chicago` |
+| `GUEST_WORKSPACE_LIMIT` | guest workspaces each new visit trims back to, oldest removed first | `500` |
 
-Health: `/actuator/health/liveness` and `/actuator/health/readiness` (readiness includes the database). The nightly reset is `java -jar life-balance.jar demo-reset`: it refills the guest workspaces and exits.
+Health: `/actuator/health/liveness` and `/actuator/health/readiness` (readiness includes the database). The nightly reset is `java -jar life-balance.jar demo-reset`: it deletes every guest workspace and exits; a guest's next request is furnished afresh.
 
 ## License
 

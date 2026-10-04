@@ -67,6 +67,18 @@ class InvariantsTest {
     }
 
     @Test
+    void requirePositive_acceptsOne() {
+        assertThatCode(() -> Invariants.requirePositive(1, "Limit")).doesNotThrowAnyException();
+    }
+
+    @Test
+    void requirePositive_rejectsZero() {
+        assertThatThrownBy(() -> Invariants.requirePositive(0, "Limit"))
+                .isInstanceOf(RuleViolationException.class)
+                .hasMessage("Limit must be positive");
+    }
+
+    @Test
     void requireRoomForOneMore_acceptsOneBelowTheMaximum() {
         assertThatCode(() -> Invariants.requireRoomForOneMore(29, 30, "core values")).doesNotThrowAnyException();
     }

@@ -10,8 +10,6 @@ import jakarta.persistence.EntityManager;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-
 @Component
 public class PersonRepositoryAdapter implements PersonRepository {
     private final PersonJpaRepository people;
@@ -28,11 +26,6 @@ public class PersonRepositoryAdapter implements PersonRepository {
     }
 
     @Override
-    public List<PersonId> findGuests() {
-        return people.findIdsByKind(PersonKind.GUEST).stream().map(PersonId::new).toList();
-    }
-
-    @Override
     public void enroll(Person person) {
         try {
             entityManager.persist(PersonEntity.from(person));
@@ -43,9 +36,18 @@ public class PersonRepositoryAdapter implements PersonRepository {
     }
 
     @Override
-    public void remove(PersonId id) {
+    public void removeAllGuests() {
+        removeInBulk(() -> people.deleteAllOfKind(PersonKind.GUEST));
+    }
+
+    @Override
+    public void removeAllButNewestGuests(int newestToKeep) {
+        removeInBulk(() -> people.deleteAllButNewestOfKind(PersonKind.GUEST, newestToKeep));
+    }
+
+    private void removeInBulk(Runnable deletion) {
         entityManager.flush();
-        people.deleteInBulk(id.value());
+        deletion.run();
         entityManager.clear();
     }
 }

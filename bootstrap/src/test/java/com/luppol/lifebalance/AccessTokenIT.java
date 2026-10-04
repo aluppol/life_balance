@@ -72,4 +72,12 @@ class AccessTokenIT extends IntegrationTest {
         mvc.perform(get("/api/me").header(HEADER, TestAccessTokens.token("guest-" + SUBJECT, List.of("guest"))))
                 .andExpect(jsonPath("$.isGuest").value(true));
     }
+
+    @Test
+    void guestTokenWithoutSession_isRejected() throws Exception {
+        JWTClaimsSet claims = TestAccessTokens.claims("guest-" + SUBJECT, List.of("guest")).claim("sid", null).build();
+
+        mvc.perform(get("/api/me").header(HEADER, TestAccessTokens.sign(claims, TestAccessTokens.signingKey())))
+                .andExpect(status().isUnauthorized());
+    }
 }

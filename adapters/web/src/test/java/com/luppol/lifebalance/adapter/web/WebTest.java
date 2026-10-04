@@ -39,6 +39,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 @TestPropertySource(properties = "lifebalance.security.access-token-header=X-Forwarded-Access-Token")
 public abstract class WebTest {
     protected static final PersonId OWNER = new PersonId("owner-subject");
+    protected static final PersonId GUEST_VISIT = new PersonId("owner-subject:guest-session");
 
     @Autowired
     protected MockMvc mvc;
@@ -98,12 +99,18 @@ public abstract class WebTest {
     }
 
     protected static RequestPostProcessor guest() {
-        return withRoles(OWNER.value(), "guest");
+        return withClaims(OWNER.value(), Map.of("sid", "guest-session"), "guest");
     }
 
     protected static RequestPostProcessor withRoles(String subject, String... roles) {
+        return withClaims(subject, Map.of(), roles);
+    }
+
+    protected static RequestPostProcessor withClaims(String subject, Map<String, Object> claims, String... roles) {
         return jwt()
-                .jwt(token -> token.subject(subject).claim("realm_access", Map.of("roles", List.of(roles))))
+                .jwt(token -> token.subject(subject)
+                        .claims(all -> all.putAll(claims))
+                        .claim("realm_access", Map.of("roles", List.of(roles))))
                 .authorities(new RealmRolesConverter());
     }
 }

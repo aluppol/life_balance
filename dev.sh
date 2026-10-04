@@ -9,7 +9,7 @@ usage() {
   echo "  db          start the local Postgres"
   echo "  backend     start Postgres and the API on :8080, trusting the local dev identity server"
   echo "  frontend    start the dev identity server on :8090 and the Vite dev server on :5173"
-  echo "  demo-reset  wipe and refill every guest workspace in the local database"
+  echo "  demo-reset  delete every guest workspace in the local database (a guest's next request gets a fresh one)"
   echo "  test        full build: tests, coverage and mutation gates, frontend checks"
   echo "  down        stop the local containers (data kept)"
   echo "  hard-reset  stop the local containers and DELETE the local database"

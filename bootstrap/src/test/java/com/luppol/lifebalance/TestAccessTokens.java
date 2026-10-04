@@ -52,7 +52,8 @@ public final class TestAccessTokens {
                 .issueTime(Date.from(Instant.now()))
                 .expirationTime(Date.from(Instant.now().plusSeconds(300)))
                 .claim("realm_access", Map.of("roles", roles))
-                .claim("preferred_username", subject);
+                .claim("preferred_username", subject)
+                .claim("sid", "session-of-" + subject);
     }
 
     public static String sign(JWTClaimsSet claims, RSAKey key) {

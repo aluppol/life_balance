@@ -36,4 +36,10 @@ public final class Invariants {
             throw new RuleViolationException("%s must not be negative".formatted(subject));
         }
     }
+
+    public static void requirePositive(int value, String subject) {
+        if (value < 1) {
+            throw new RuleViolationException("%s must be positive".formatted(subject));
+        }
+    }
 }

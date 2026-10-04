@@ -43,11 +43,11 @@ test('marks the section of the current page in the navigation', async () => {
   );
 });
 
-test('tells a guest that the account is a shared demo', async () => {
+test('tells a guest that the demo workspace is their own', async () => {
   planner().signedInPerson = { displayName: 'Guest', isGuest: true };
   renderRoute('/');
   expect(await screen.findByRole('complementary', { name: 'Demo account' })).toHaveTextContent(
-    'You are exploring a shared demo account. Feel free to change anything — it resets every night.',
+    'You are exploring a demo workspace of your own. Feel free to change anything — no one else sees it, and it resets every night.',
   );
 });
 

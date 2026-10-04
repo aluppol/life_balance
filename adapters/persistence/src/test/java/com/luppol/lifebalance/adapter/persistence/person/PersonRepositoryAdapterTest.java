@@ -12,6 +12,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class PersonRepositoryAdapterTest extends PersistenceTest {
+    private static final PersonId OLDEST_VISIT = new PersonId("guest:oldest-session");
+    private static final PersonId MIDDLE_VISIT = new PersonId("guest:middle-session");
+    private static final PersonId NEWEST_VISIT = new PersonId("guest:newest-session");
+
     @Test
     void enroll_makesThePersonKnown() {
         people.enroll(Person.member(OWNER));
@@ -38,24 +42,49 @@ class PersonRepositoryAdapterTest extends PersistenceTest {
     }
 
     @Test
-    void findGuests_listsOnlyGuests() {
-        PersonId guest = new PersonId("guest");
+    void removeAllGuests_deletesEveryGuestWithEverythingTheyOwnAndSparesMembers() {
+        people.enroll(Person.guest(OLDEST_VISIT));
         people.enroll(Person.member(OWNER));
-        people.enroll(Person.guest(guest));
+        people.enroll(Person.guest(NEWEST_VISIT));
+        coreValues.add(new CoreValue(CoreValueId.random(), OLDEST_VISIT, "Integrity", "", 0));
+        coreValues.add(new CoreValue(CoreValueId.random(), OWNER, "Integrity", "", 0));
+        coreValues.add(new CoreValue(CoreValueId.random(), NEWEST_VISIT, "Integrity", "", 0));
 
-        assertThat(people.findGuests()).containsExactly(guest);
+        people.removeAllGuests();
+
+        assertThat(people.isEnrolled(OLDEST_VISIT)).isFalse();
+        assertThat(people.isEnrolled(NEWEST_VISIT)).isFalse();
+        assertThat(coreValues.findAllByOwner(OLDEST_VISIT)).isEmpty();
+        assertThat(coreValues.findAllByOwner(NEWEST_VISIT)).isEmpty();
+        assertThat(people.isEnrolled(OWNER)).isTrue();
+        assertThat(coreValues.findAllByOwner(OWNER)).hasSize(1);
     }
 
     @Test
-    void remove_deletesThePersonAndEverythingTheyOwn() {
-        enroll(OWNER, STRANGER);
-        coreValues.add(new CoreValue(CoreValueId.random(), OWNER, "Integrity", "", 0));
-        coreValues.add(new CoreValue(CoreValueId.random(), STRANGER, "Integrity", "", 0));
+    void removeAllButNewestGuests_deletesTheOldestGuestsInEnrollmentOrderAndSparesMembers() {
+        people.enroll(Person.guest(OLDEST_VISIT));
+        people.enroll(Person.member(OWNER));
+        people.enroll(Person.guest(MIDDLE_VISIT));
+        people.enroll(Person.guest(NEWEST_VISIT));
+        coreValues.add(new CoreValue(CoreValueId.random(), OLDEST_VISIT, "Integrity", "", 0));
 
-        people.remove(OWNER);
+        people.removeAllButNewestGuests(2);
 
-        assertThat(people.isEnrolled(OWNER)).isFalse();
-        assertThat(coreValues.findAllByOwner(OWNER)).isEmpty();
-        assertThat(coreValues.findAllByOwner(STRANGER)).hasSize(1);
+        assertThat(people.isEnrolled(OLDEST_VISIT)).isFalse();
+        assertThat(coreValues.findAllByOwner(OLDEST_VISIT)).isEmpty();
+        assertThat(people.isEnrolled(MIDDLE_VISIT)).isTrue();
+        assertThat(people.isEnrolled(NEWEST_VISIT)).isTrue();
+        assertThat(people.isEnrolled(OWNER)).isTrue();
+    }
+
+    @Test
+    void removeAllButNewestGuests_keepsEveryGuestWhileThereIsRoom() {
+        people.enroll(Person.guest(OLDEST_VISIT));
+        people.enroll(Person.guest(NEWEST_VISIT));
+
+        people.removeAllButNewestGuests(2);
+
+        assertThat(people.isEnrolled(OLDEST_VISIT)).isTrue();
+        assertThat(people.isEnrolled(NEWEST_VISIT)).isTrue();
     }
 }

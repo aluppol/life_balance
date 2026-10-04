@@ -49,4 +49,16 @@ class PersonTest {
         assertThat(new PersonAlreadyEnrolledException(ID))
                 .hasMessage("Person f81d4fae-7dec-11d0-a765-00a0c91e6bf6 is already enrolled");
     }
+
+    @Test
+    void guestWorkspaceLimit_acceptsOne() {
+        assertThat(new GuestWorkspaceLimit(1).maximum()).isEqualTo(1);
+    }
+
+    @Test
+    void guestWorkspaceLimit_rejectsZero() {
+        assertThatThrownBy(() -> new GuestWorkspaceLimit(0))
+                .isInstanceOf(RuleViolationException.class)
+                .hasMessage("Guest workspace limit must be positive");
+    }
 }

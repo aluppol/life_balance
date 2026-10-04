@@ -7,6 +7,7 @@ const certificatesPath = '/realms/dev/protocol/openid-connect/certs';
 const tokenPath = '/token';
 const tokenLifetimeSeconds = 15 * 60;
 const signingKeys = createSigningKeys();
+const sessionId = randomUUID();
 
 createServer(respond).listen(port, () => {
   process.stdout.write(`Dev identity server for ${issuer} on http://localhost:${String(port)}\n`);
@@ -46,6 +47,7 @@ function claimsOf(issuedAt, expiresAt) {
   return {
     iss: issuer,
     sub: process.env.DEV_SUBJECT ?? 'local-developer',
+    sid: sessionId,
     aud: ['lifebalance'],
     preferred_username: name,
     name,

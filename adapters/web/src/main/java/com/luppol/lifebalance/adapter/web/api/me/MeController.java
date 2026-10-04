@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Me", description = "The signed-in person")
 public class MeController {
     @GetMapping
-    @Operation(summary = "Who is signed in, and whether it is the shared guest account")
+    @Operation(summary = "Who is signed in, and whether it is a guest with a demo workspace of their own")
     public MeResponse me(Authentication authentication) {
         return new MeResponse(Principals.displayName(authentication), Principals.isGuest(authentication));
     }

@@ -2,11 +2,14 @@ package com.luppol.lifebalance.adapter.persistence.person;
 
 import com.luppol.lifebalance.domain.person.Person;
 import com.luppol.lifebalance.domain.person.PersonKind;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+
+import java.time.Instant;
 
 @Entity
 @Table(name = "person")
@@ -16,6 +19,9 @@ public class PersonEntity {
 
     @Enumerated(EnumType.STRING)
     private PersonKind kind;
+
+    @Column(name = "enrolled_at", insertable = false, updatable = false)
+    private Instant enrolledAt;
 
     protected PersonEntity() {
     }

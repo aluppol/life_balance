@@ -18,6 +18,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 @SpringBootTest
 @AutoConfigureMockMvc
 public abstract class IntegrationTest {
+    protected static final int GUEST_WORKSPACE_LIMIT = 3;
     protected static final PostgreSQLContainer POSTGRES =
             new PostgreSQLContainer("postgres:16-alpine").withInitScript("db/create-schema.sql");
 
@@ -35,11 +36,22 @@ public abstract class IntegrationTest {
         registry.add("spring.datasource.password", POSTGRES::getPassword);
         registry.add("spring.security.oauth2.resourceserver.jwt.issuer-uri", () -> TestAccessTokens.ISSUER);
         registry.add("spring.security.oauth2.resourceserver.jwt.jwk-set-uri", TestAccessTokens::jwkSetUri);
+        registry.add("lifebalance.demo.guest-workspace-limit", () -> GUEST_WORKSPACE_LIMIT);
     }
 
     protected static RequestPostProcessor person(String subject, String... roles) {
+        return withClaims(subject, Map.of(), roles);
+    }
+
+    protected static RequestPostProcessor guestVisit(String subject, String session) {
+        return withClaims(subject, Map.of("sid", session), "guest");
+    }
+
+    private static RequestPostProcessor withClaims(String subject, Map<String, Object> claims, String... roles) {
         return jwt()
-                .jwt(token -> token.subject(subject).claim("realm_access", Map.of("roles", List.of(roles))))
+                .jwt(token -> token.subject(subject)
+                        .claims(all -> all.putAll(claims))
+                        .claim("realm_access", Map.of("roles", List.of(roles))))
                 .authorities(new RealmRolesConverter());
     }
 }

@@ -2,10 +2,13 @@ package com.luppol.lifebalance.adapter.web.security;
 
 import com.luppol.lifebalance.adapter.web.WebTest;
 import com.luppol.lifebalance.domain.person.PersonAlreadyEnrolledException;
+import com.luppol.lifebalance.domain.person.PersonId;
 import com.luppol.lifebalance.domain.value.CoreValue;
 import com.luppol.lifebalance.domain.value.CoreValueId;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+
+import java.util.Map;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
@@ -47,13 +50,49 @@ class SecurityTest extends WebTest {
     }
 
     @Test
-    void firstRequest_enrollsAGuestWithTheDemoWorkspace() throws Exception {
-        when(personQueries.isEnrolled(OWNER)).thenReturn(false);
+    void firstRequest_enrollsAGuestVisitWithTheDemoWorkspace() throws Exception {
+        when(personQueries.isEnrolled(GUEST_VISIT)).thenReturn(false);
 
         mvc.perform(get("/api/values").with(guest())).andExpect(status().isOk());
 
-        verify(personCommands).enrollGuest(OWNER);
-        verify(personCommands, never()).enrollMember(OWNER);
+        verify(personCommands).enrollGuest(GUEST_VISIT);
+        verify(personCommands, never()).enrollMember(any());
+        verify(coreValueQueries).listAll(GUEST_VISIT);
+    }
+
+    @Test
+    void eachGuestSession_isASeparatePerson() throws Exception {
+        when(personQueries.isEnrolled(any())).thenReturn(false);
+
+        mvc.perform(get("/api/values").with(guest())).andExpect(status().isOk());
+        mvc.perform(get("/api/values").with(withClaims(OWNER.value(), Map.of("sid", "next-session"), "guest")))
+                .andExpect(status().isOk());
+
+        verify(personCommands).enrollGuest(GUEST_VISIT);
+        verify(personCommands).enrollGuest(new PersonId("owner-subject:next-session"));
+    }
+
+    @Test
+    void guestTokenWithoutSession_isRejected() throws Exception {
+        mvc.perform(get("/api/values").with(withRoles(OWNER.value(), "guest")))
+                .andExpect(status().isUnauthorized())
+                .andExpect(header().string("WWW-Authenticate", containsString("invalid_token")));
+        mvc.perform(get("/api/me").with(withClaims(OWNER.value(), Map.of("sid", " "), "guest")))
+                .andExpect(status().isUnauthorized());
+
+        verify(personCommands, never()).enrollGuest(any());
+        verify(coreValueQueries, never()).listAll(any());
+    }
+
+    @Test
+    void memberWithASession_isStillKnownBySubject() throws Exception {
+        when(personQueries.isEnrolled(OWNER)).thenReturn(false);
+
+        mvc.perform(get("/api/values").with(withClaims(OWNER.value(), Map.of("sid", "member-session"), "USER")))
+                .andExpect(status().isOk());
+
+        verify(personCommands).enrollMember(OWNER);
+        verify(coreValueQueries).listAll(OWNER);
     }
 
     @Test
