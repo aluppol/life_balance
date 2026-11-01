@@ -9,6 +9,8 @@ import java.util.Optional;
 public interface PlannedActivityRepository {
     List<PlannedActivity> findAllInWeek(PersonId owner, WeekStart week);
 
+    int countAllByOwner(PersonId owner);
+
     Optional<PlannedActivity> findById(PersonId owner, ActivityId id);
 
     default PlannedActivity findRequired(PersonId owner, ActivityId id) {

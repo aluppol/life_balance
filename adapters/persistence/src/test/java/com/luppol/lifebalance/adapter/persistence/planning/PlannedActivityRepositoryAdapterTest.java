@@ -49,6 +49,18 @@ class PlannedActivityRepositoryAdapterTest extends PersistenceTest {
     }
 
     @Test
+    void countAllByOwner_countsEveryWeekOfTheOwner() {
+        LifeRole strangersRole = addRole(STRANGER, "Parent");
+        activities.add(activity("This week", Optional.empty()));
+        activities.add(PlannedActivity.planned(ActivityId.random(), OWNER, WEEK.previous(), unscheduled(parent)));
+        activities.add(PlannedActivity.planned(ActivityId.random(), STRANGER, WEEK, unscheduled(strangersRole)));
+        flushAndClear();
+
+        assertThat(activities.countAllByOwner(OWNER)).isEqualTo(2);
+        assertThat(activities.countAllByOwner(STRANGER)).isEqualTo(1);
+    }
+
+    @Test
     void add_keepsGoalAndCompletion() {
         PlannedActivity activity = PlannedActivity.planned(ActivityId.random(), OWNER, WEEK,
                 new ActivityDetails(parent.id(), Optional.of(cycling.id()), "Bike practice", Quadrant.IMPORTANT_NOT_URGENT,
@@ -105,5 +117,9 @@ class PlannedActivityRepositoryAdapterTest extends PersistenceTest {
     private PlannedActivity activity(String title, Optional<LocalDate> day) {
         return PlannedActivity.planned(ActivityId.random(), OWNER, WEEK,
                 new ActivityDetails(parent.id(), Optional.empty(), title, Quadrant.IMPORTANT_NOT_URGENT, day));
+    }
+
+    private static ActivityDetails unscheduled(LifeRole role) {
+        return new ActivityDetails(role.id(), Optional.empty(), "Errand", Quadrant.IMPORTANT_URGENT, Optional.empty());
     }
 }

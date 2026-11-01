@@ -1,5 +1,6 @@
 package com.luppol.lifebalance.adapter.web;
 
+import com.luppol.lifebalance.adapter.web.security.ActivityInterceptor;
 import com.luppol.lifebalance.adapter.web.security.CurrentPersonResolver;
 import com.luppol.lifebalance.adapter.web.security.EnrollmentInterceptor;
 import com.luppol.lifebalance.application.person.PersonCommands;
@@ -34,6 +35,7 @@ public class WebConfiguration implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(new EnrollmentInterceptor(personQueries, personCommands)).addPathPatterns("/api/**");
+        registry.addInterceptor(new ActivityInterceptor(personCommands)).addPathPatterns("/api/**");
     }
 
     @Override

@@ -22,6 +22,11 @@ public class WeeklyReviewRepositoryAdapter implements WeeklyReviewRepository {
     }
 
     @Override
+    public int countAllByOwner(PersonId owner) {
+        return Math.toIntExact(reviews.countByKeyPersonId(owner.value()));
+    }
+
+    @Override
     public void save(WeeklyReview review) {
         reviews.save(WeeklyReviewEntity.from(review));
     }

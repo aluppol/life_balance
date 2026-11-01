@@ -8,5 +8,7 @@ import java.util.Optional;
 public interface WeeklyReviewRepository {
     Optional<WeeklyReview> findByWeek(PersonId owner, WeekStart week);
 
+    int countAllByOwner(PersonId owner);
+
     void save(WeeklyReview review);
 }

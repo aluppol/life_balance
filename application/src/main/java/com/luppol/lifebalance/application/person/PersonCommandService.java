@@ -2,6 +2,7 @@ package com.luppol.lifebalance.application.person;
 
 import com.luppol.lifebalance.application.demo.DemoWorkspace;
 import com.luppol.lifebalance.domain.person.GuestWorkspaceLimit;
+import com.luppol.lifebalance.domain.person.InactivityPeriod;
 import com.luppol.lifebalance.domain.person.Person;
 import com.luppol.lifebalance.domain.person.PersonId;
 import com.luppol.lifebalance.domain.person.PersonRepository;
@@ -35,8 +36,18 @@ public class PersonCommandService implements PersonCommands {
     }
 
     @Override
+    public void recordActivity(PersonId id) {
+        people.recordActivity(id);
+    }
+
+    @Override
     public void resetGuestWorkspaces() {
         people.removeAllGuests();
+    }
+
+    @Override
+    public void removeInactiveMembers(InactivityPeriod period) {
+        people.removeInactiveMembers(period);
     }
 
     private void makeRoomForOneMoreGuest() {

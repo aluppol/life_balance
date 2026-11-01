@@ -1,6 +1,8 @@
 package com.luppol.lifebalance.adapter.persistence.person;
 
+import com.luppol.lifebalance.domain.person.MemberActivity;
 import com.luppol.lifebalance.domain.person.Person;
+import com.luppol.lifebalance.domain.person.PersonId;
 import com.luppol.lifebalance.domain.person.PersonKind;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -23,6 +25,9 @@ public class PersonEntity {
     @Column(name = "enrolled_at", insertable = false, updatable = false)
     private Instant enrolledAt;
 
+    @Column(name = "last_active_at", insertable = false, updatable = false)
+    private Instant lastActiveAt;
+
     protected PersonEntity() {
     }
 
@@ -33,5 +38,9 @@ public class PersonEntity {
 
     static PersonEntity from(Person person) {
         return new PersonEntity(person.id().value(), person.kind());
+    }
+
+    MemberActivity toMemberActivity() {
+        return new MemberActivity(new PersonId(id), lastActiveAt);
     }
 }

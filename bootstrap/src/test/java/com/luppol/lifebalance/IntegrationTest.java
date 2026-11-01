@@ -12,6 +12,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 
@@ -37,6 +38,13 @@ public abstract class IntegrationTest {
         registry.add("spring.security.oauth2.resourceserver.jwt.issuer-uri", () -> TestAccessTokens.ISSUER);
         registry.add("spring.security.oauth2.resourceserver.jwt.jwk-set-uri", TestAccessTokens::jwkSetUri);
         registry.add("lifebalance.demo.guest-workspace-limit", () -> GUEST_WORKSPACE_LIMIT);
+    }
+
+    protected static String[] operatorArguments(String... words) {
+        return Stream.concat(Stream.of(words), Stream.of(
+                "--spring.datasource.url=" + POSTGRES.getJdbcUrl(),
+                "--spring.datasource.username=" + POSTGRES.getUsername(),
+                "--spring.datasource.password=" + POSTGRES.getPassword())).toArray(String[]::new);
     }
 
     protected static RequestPostProcessor person(String subject, String... roles) {

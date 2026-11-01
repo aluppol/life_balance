@@ -5,6 +5,8 @@ import com.luppol.lifebalance.application.fakes.InMemoryPersonRepository;
 import com.luppol.lifebalance.application.fakes.PlannerStore;
 import com.luppol.lifebalance.domain.mission.MissionStatement;
 import com.luppol.lifebalance.domain.person.GuestWorkspaceLimit;
+import com.luppol.lifebalance.domain.person.InactivityPeriod;
+import com.luppol.lifebalance.domain.person.MemberActivity;
 import com.luppol.lifebalance.domain.person.Person;
 import com.luppol.lifebalance.domain.person.PersonAlreadyEnrolledException;
 import com.luppol.lifebalance.domain.person.PersonId;
@@ -14,6 +16,7 @@ import com.luppol.lifebalance.domain.value.CoreValueId;
 import org.junit.jupiter.api.Test;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 
@@ -23,6 +26,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class PersonServicesTest {
     private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-09-23T15:00:00Z"), ZoneOffset.UTC);
     private static final PersonId MEMBER = new PersonId("member");
+    private static final PersonId SECOND_MEMBER = new PersonId("second-member");
+    private static final PersonId ACTIVE_MEMBER = new PersonId("active-member");
+    private static final InactivityPeriod A_YEAR = new InactivityPeriod(365);
     private static final PersonId GUEST = new PersonId("guest");
     private static final PersonId FIRST_VISIT = new PersonId("guest:first-session");
     private static final PersonId SECOND_VISIT = new PersonId("guest:second-session");
@@ -107,6 +113,50 @@ class PersonServicesTest {
         assertThat(store.missionStatements().findByOwner(SECOND_VISIT)).isEmpty();
         assertThat(store.missionStatements().findByOwner(MEMBER).orElseThrow().text()).isEqualTo("Mine");
         assertThat(queries.isEnrolled(MEMBER)).isTrue();
+    }
+
+    @Test
+    void findInactiveMembers_listsMembersIdleForThePeriodOldestFirst() {
+        commands.enrollMember(MEMBER);
+        Instant memberEnrolledAt = people.now();
+        people.advanceClockBy(Duration.ofDays(10));
+        commands.enrollMember(SECOND_MEMBER);
+        commands.enrollGuest(GUEST);
+        Instant secondMemberEnrolledAt = people.now();
+        people.advanceClockBy(Duration.ofDays(400));
+        commands.enrollMember(ACTIVE_MEMBER);
+
+        assertThat(queries.findInactiveMembers(A_YEAR)).containsExactly(new MemberActivity(MEMBER, memberEnrolledAt),
+                new MemberActivity(SECOND_MEMBER, secondMemberEnrolledAt));
+        assertThat(queries.countMembers()).isEqualTo(3);
+    }
+
+    @Test
+    void recordActivity_keepsAMemberActive() {
+        commands.enrollMember(MEMBER);
+        people.advanceClockBy(Duration.ofDays(400));
+
+        commands.recordActivity(MEMBER);
+
+        assertThat(queries.findInactiveMembers(A_YEAR)).isEmpty();
+    }
+
+    @Test
+    void removeInactiveMembers_removesIdleMembersWithTheirPlannerAndSparesGuestsAndActiveMembers() {
+        commands.enrollMember(MEMBER);
+        commands.enrollGuest(GUEST);
+        store.missionStatements().save(new MissionStatement(MEMBER, "Mine"));
+        people.advanceClockBy(Duration.ofDays(400));
+        commands.enrollMember(ACTIVE_MEMBER);
+
+        commands.removeInactiveMembers(A_YEAR);
+
+        assertThat(queries.isEnrolled(MEMBER)).isFalse();
+        assertThat(store.missionStatements().findByOwner(MEMBER)).isEmpty();
+        assertThat(store.lifeRoles().findAllByOwner(MEMBER)).isEmpty();
+        assertThat(queries.isEnrolled(GUEST)).isTrue();
+        assertThat(queries.isEnrolled(ACTIVE_MEMBER)).isTrue();
+        assertThat(queries.countMembers()).isEqualTo(1);
     }
 
     @Test

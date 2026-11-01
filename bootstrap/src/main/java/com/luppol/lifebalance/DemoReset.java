@@ -1,25 +1,15 @@
 package com.luppol.lifebalance;
 
 import com.luppol.lifebalance.application.person.PersonCommands;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.WebApplicationType;
-import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.ApplicationContext;
 
-public final class DemoReset {
-    public static final String COMMAND = "demo-reset";
+import java.io.PrintStream;
 
-    private DemoReset() {
-    }
+public record DemoReset() implements OperatorCommand {
+    public static final String NAME = "demo-reset";
 
-    public static boolean isRequested(String[] args) {
-        return args.length > 0 && COMMAND.equals(args[0]);
-    }
-
-    public static void run(String[] args) {
-        SpringApplication application = new SpringApplication(LifeBalanceApplication.class);
-        application.setWebApplicationType(WebApplicationType.NONE);
-        try (ConfigurableApplicationContext context = application.run(args)) {
-            context.getBean(PersonCommands.class).resetGuestWorkspaces();
-        }
+    @Override
+    public void run(ApplicationContext context, PrintStream output) {
+        context.getBean(PersonCommands.class).resetGuestWorkspaces();
     }
 }

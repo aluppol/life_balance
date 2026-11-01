@@ -11,6 +11,7 @@ import static com.luppol.lifebalance.domain.Invariants.requirePresent;
 public record WeeklyReview(PersonId owner, WeekStart week, String accomplishments, String lessons,
                            Set<RenewalDimension> renewedDimensions) {
     public static final int MAXIMUM_TEXT_LENGTH = 4000;
+    public static final int MAXIMUM_PER_PERSON = 520;
 
     public WeeklyReview {
         requirePresent(owner, "Weekly review owner");

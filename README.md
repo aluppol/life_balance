@@ -14,6 +14,8 @@ A weekly planner built on Stephen Covey's *The 7 Habits of Highly Effective Peop
 
 Every **guest** visit opens a furnished demo planner of its own (mission, values, roles, goals, this week planned, last week reviewed): visitors never see each other's changes, and every guest workspace is wiped every night.
 
+Every member's planner is bounded: at most 30 values, 20 roles, 200 goals, 150 activities in a week and 10,000 in all, and 520 weekly reviews (ten years; rewriting the review of a week already reviewed is always allowed). A request beyond a limit is refused with `422`.
+
 ## Architecture
 
 Clean Architecture in Gradle modules. Source dependencies point inward only; the build enforces it twice: a module cannot compile against an outer module, and ArchUnit rules fail the build if a class breaks the layering, a feature cycle appears, or the inner layers touch a framework.
@@ -108,7 +110,17 @@ The build produces one executable jar, `bootstrap/build/libs/life-balance.jar`, 
 | `DEMO_TIME_ZONE` | time zone that decides "this week" for the demo data | `America/Chicago` |
 | `GUEST_WORKSPACE_LIMIT` | guest workspaces each new visit trims back to, oldest removed first | `500` |
 
-Health: `/actuator/health/liveness` and `/actuator/health/readiness` (readiness includes the database). The nightly reset is `java -jar life-balance.jar demo-reset`: it deletes every guest workspace and exits; a guest's next request is furnished afresh.
+Health: `/actuator/health/liveness` and `/actuator/health/readiness` (readiness includes the database).
+
+The app records when each person was last active: the first API request of each day moves the date forward. The same jar runs three operator commands with the same environment; each starts without a web server, does its work and exits:
+
+| Command | Does |
+|---|---|
+| `java -jar life-balance.jar demo-reset` | deletes every guest workspace (the nightly reset); a guest's next request is furnished afresh |
+| `java -jar life-balance.jar inactive-members <days>` | prints the number of members and every member not active for at least `<days>` days, with id and last-active time (the app stores no names or e-mail addresses) |
+| `java -jar life-balance.jar remove-inactive-members <days>` | prints those members, deletes them with everything they own and prints how many members remain; guests are untouched, and the sign-in account stays, so a returning person starts with an empty planner |
+
+Nothing is removed automatically: the two member commands run only when an operator starts them.
 
 ## License
 

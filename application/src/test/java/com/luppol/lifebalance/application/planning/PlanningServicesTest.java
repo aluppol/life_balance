@@ -151,6 +151,19 @@ class PlanningServicesTest {
         assertThat(queries.listWeek(OWNER, WEEK.previous())).isEmpty();
     }
 
+    @Test
+    void plan_rejectsActivitiesBeyondThePersonalMaximum() {
+        for (int index = 0; index < PlannedActivity.MAXIMUM_PER_PERSON; index++) {
+            store.activities().add(PlannedActivity.planned(ActivityId.random(), OWNER, WEEK.previous(),
+                    details(parent.id(), Optional.empty())));
+        }
+
+        assertThatThrownBy(() -> plan(details(parent.id(), Optional.empty())))
+                .isInstanceOf(RuleViolationException.class)
+                .hasMessage("A person can keep at most 10000 activities");
+        assertThat(queries.listWeek(OWNER, WEEK)).isEmpty();
+    }
+
     private ActivityId plan(ActivityDetails details) {
         ActivityId id = ActivityId.random();
         commands.plan(new PlanActivity(id, OWNER, WEEK, details));

@@ -3,6 +3,8 @@ package com.luppol.lifebalance.domain.person;
 import com.luppol.lifebalance.domain.RuleViolationException;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -60,5 +62,32 @@ class PersonTest {
         assertThatThrownBy(() -> new GuestWorkspaceLimit(0))
                 .isInstanceOf(RuleViolationException.class)
                 .hasMessage("Guest workspace limit must be positive");
+    }
+
+    @Test
+    void inactivityPeriod_acceptsOneDay() {
+        assertThat(new InactivityPeriod(1).days()).isEqualTo(1);
+    }
+
+    @Test
+    void inactivityPeriod_rejectsZero() {
+        assertThatThrownBy(() -> new InactivityPeriod(0))
+                .isInstanceOf(RuleViolationException.class)
+                .hasMessage("Inactivity period must be positive");
+    }
+
+    @Test
+    void memberActivity_keepsTheLastActiveTime() {
+        Instant lastActiveAt = Instant.parse("2025-10-01T12:00:00Z");
+
+        assertThat(new MemberActivity(ID, lastActiveAt).lastActiveAt()).isEqualTo(lastActiveAt);
+    }
+
+    @Test
+    void memberActivity_requiresAnIdAndATime() {
+        Instant lastActiveAt = Instant.parse("2025-10-01T12:00:00Z");
+
+        assertThatThrownBy(() -> new MemberActivity(null, lastActiveAt)).hasMessage("Member id is required");
+        assertThatThrownBy(() -> new MemberActivity(ID, null)).hasMessage("Last active time is required");
     }
 }

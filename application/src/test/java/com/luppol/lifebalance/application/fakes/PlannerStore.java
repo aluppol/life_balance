@@ -192,6 +192,11 @@ public class PlannerStore {
         }
 
         @Override
+        public int countAllByOwner(PersonId owner) {
+            return activityRecords.countByOwner(owner);
+        }
+
+        @Override
         public Optional<PlannedActivity> findById(PersonId owner, ActivityId id) {
             return activityRecords.findById(owner, id);
         }
@@ -216,6 +221,11 @@ public class PlannerStore {
         @Override
         public Optional<WeeklyReview> findByWeek(PersonId owner, WeekStart week) {
             return Optional.ofNullable(reviewRecords.get(List.of(owner, week)));
+        }
+
+        @Override
+        public int countAllByOwner(PersonId owner) {
+            return (int) reviewRecords.values().stream().filter(review -> review.owner().equals(owner)).count();
         }
 
         @Override

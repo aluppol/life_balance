@@ -21,19 +21,18 @@ class DemoResetIT extends IntegrationTest {
         mvc.perform(put("/api/mission").with(guest).contentType(MediaType.APPLICATION_JSON).content("{\"text\":\"Defaced\"}"))
                 .andExpect(status().isOk());
 
-        LifeBalanceApplication.main(new String[]{
-                DemoReset.COMMAND,
-                "--spring.datasource.url=" + POSTGRES.getJdbcUrl(),
-                "--spring.datasource.username=" + POSTGRES.getUsername(),
-                "--spring.datasource.password=" + POSTGRES.getPassword()});
+        LifeBalanceApplication.main(operatorArguments(DemoReset.NAME));
 
         mvc.perform(get("/api/mission").with(guest)).andExpect(jsonPath("$.text", startsWith("I live by principles")));
     }
 
     @Test
-    void demoReset_isRequestedOnlyByItsCommand() {
-        assertThat(DemoReset.isRequested(new String[]{"demo-reset"})).isTrue();
-        assertThat(DemoReset.isRequested(new String[]{"--server.port=8080"})).isFalse();
-        assertThat(DemoReset.isRequested(new String[]{})).isFalse();
+    void operatorCommands_areRequestedOnlyByTheirNames() {
+        assertThat(OperatorCommands.isRequested(new String[]{"demo-reset"})).isTrue();
+        assertThat(OperatorCommands.isRequested(new String[]{"inactive-members", "365"})).isTrue();
+        assertThat(OperatorCommands.isRequested(new String[]{"remove-inactive-members", "365"})).isTrue();
+        assertThat(OperatorCommands.isRequested(new String[]{"--server.port=8080"})).isFalse();
+        assertThat(OperatorCommands.isRequested(new String[]{"365", "inactive-members"})).isFalse();
+        assertThat(OperatorCommands.isRequested(new String[]{})).isFalse();
     }
 }

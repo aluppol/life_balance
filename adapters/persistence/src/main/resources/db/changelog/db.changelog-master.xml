@@ -9,4 +9,5 @@
     <include file="db/changelog/migrations/3999205283-drop-legacy-tables.sql"/>
     <include file="db/changelog/migrations/3999205284-planner-schema.sql"/>
     <include file="db/changelog/migrations/4000069869-person-enrolled-at-clock-timestamp.sql"/>
+    <include file="db/changelog/migrations/4002561024-person-last-active-at.sql"/>
 </databaseChangeLog>

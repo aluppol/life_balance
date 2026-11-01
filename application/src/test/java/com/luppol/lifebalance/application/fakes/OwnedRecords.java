@@ -24,6 +24,10 @@ public class OwnedRecords<K, V> {
         return records.values().stream().filter(record -> owner.apply(record).equals(person)).sorted(order).toList();
     }
 
+    public int countByOwner(PersonId person) {
+        return (int) records.values().stream().filter(record -> owner.apply(record).equals(person)).count();
+    }
+
     public Optional<V> findById(PersonId person, K key) {
         return Optional.ofNullable(records.get(key)).filter(record -> owner.apply(record).equals(person));
     }

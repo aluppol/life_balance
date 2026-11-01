@@ -29,6 +29,8 @@ public class PlanningCommandService implements PlanningCommands {
     public void plan(PlanActivity command) {
         int plannedThisWeek = activities.findAllInWeek(command.owner(), command.week()).size();
         Invariants.requireRoomForOneMore(plannedThisWeek, PlannedActivity.MAXIMUM_PER_WEEK, "activities in a week");
+        int plannedInAll = activities.countAllByOwner(command.owner());
+        Invariants.requireRoomForOneMore(plannedInAll, PlannedActivity.MAXIMUM_PER_PERSON, "activities");
         requireOwnedReferences(command.owner(), command.details());
         activities.add(PlannedActivity.planned(command.id(), command.owner(), command.week(), command.details()));
     }

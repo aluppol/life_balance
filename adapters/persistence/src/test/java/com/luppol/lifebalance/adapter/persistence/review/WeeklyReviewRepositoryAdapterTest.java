@@ -29,4 +29,16 @@ class WeeklyReviewRepositoryAdapterTest extends PersistenceTest {
         assertThat(reviews.findByWeek(OWNER, WEEK.previous())).isEmpty();
         assertThat(reviews.findByWeek(STRANGER, WEEK)).isEmpty();
     }
+
+    @Test
+    void countAllByOwner_countsTheOwnersReviewedWeeks() {
+        enroll(OWNER, STRANGER);
+        reviews.save(new WeeklyReview(OWNER, WEEK, "", "", Set.of()));
+        reviews.save(new WeeklyReview(OWNER, WEEK.previous(), "", "", Set.of(RenewalDimension.SOCIAL_EMOTIONAL)));
+        reviews.save(new WeeklyReview(STRANGER, WEEK, "", "", Set.of()));
+        flushAndClear();
+
+        assertThat(reviews.countAllByOwner(OWNER)).isEqualTo(2);
+        assertThat(reviews.countAllByOwner(STRANGER)).isEqualTo(1);
+    }
 }

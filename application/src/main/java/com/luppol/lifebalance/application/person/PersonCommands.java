@@ -1,5 +1,6 @@
 package com.luppol.lifebalance.application.person;
 
+import com.luppol.lifebalance.domain.person.InactivityPeriod;
 import com.luppol.lifebalance.domain.person.PersonId;
 
 public interface PersonCommands {
@@ -7,5 +8,9 @@ public interface PersonCommands {
 
     void enrollGuest(PersonId id);
 
+    void recordActivity(PersonId id);
+
     void resetGuestWorkspaces();
+
+    void removeInactiveMembers(InactivityPeriod period);
 }

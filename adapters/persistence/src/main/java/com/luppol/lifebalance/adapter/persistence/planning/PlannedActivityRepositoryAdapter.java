@@ -29,6 +29,11 @@ public class PlannedActivityRepositoryAdapter implements PlannedActivityReposito
     }
 
     @Override
+    public int countAllByOwner(PersonId owner) {
+        return Math.toIntExact(activities.countByPersonId(owner.value()));
+    }
+
+    @Override
     public Optional<PlannedActivity> findById(PersonId owner, ActivityId id) {
         return activities.findByPersonIdAndId(owner.value(), id.value()).map(PlannedActivityEntity::toDomain);
     }

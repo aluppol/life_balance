@@ -17,6 +17,8 @@ public interface PlannedActivityJpaRepository extends JpaRepository<PlannedActiv
             """)
     List<PlannedActivityEntity> findAllInWeek(String personId, LocalDate weekStart);
 
+    long countByPersonId(String personId);
+
     Optional<PlannedActivityEntity> findByPersonIdAndId(String personId, UUID id);
 
     @Modifying
